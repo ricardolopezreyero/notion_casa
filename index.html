@@ -75,7 +75,8 @@ em{font-style:italic;color:var(--green)}
   border:.5px solid rgba(255,255,255,.07);
   border-radius:14px;padding:12px 10px 14px;min-height:200px;transition:border-color .2s,background .2s;
 }
-.col.drag-over{border-color:rgba(86,239,159,.45);background:rgba(86,239,159,.05)}
+.col{transition:border-color .25s var(--ease),background .25s var(--ease),transform .25s var(--ease)}
+.col.drag-over{border-color:rgba(86,239,159,.5);background:rgba(86,239,159,.06);transform:translateY(-2px)}
 .col-head{display:flex;align-items:center;gap:8px;padding:4px 6px 12px}
 .col-dot{width:9px;height:9px;border-radius:50%;flex:none}
 .col-name{font-size:12px;font-weight:800;letter-spacing:.2px;color:#fff;text-transform:uppercase}
@@ -86,10 +87,11 @@ em{font-style:italic;color:var(--green)}
 /* ---------- CARD ---------- */
 .card{
   background:#fff;border:.5px solid var(--border);border-radius:11px;padding:11px 12px 10px;
-  cursor:grab;position:relative;transition:transform .25s var(--ease),box-shadow .25s;animation:fIn .3s var(--ease);
+  cursor:grab;position:relative;transition:transform .32s var(--ease),box-shadow .32s var(--ease);animation:cardIn .42s var(--ease) both;
 }
 .card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,18,64,.22)}
-.card.dragging{opacity:.45;cursor:grabbing}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.4;transform:scale(.97) rotate(-.6deg);box-shadow:0 14px 34px rgba(0,18,64,.28)}
 .card-title{font-size:13.5px;font-weight:700;line-height:1.32;letter-spacing:-.2px;color:#16203a;padding-right:34px;word-break:break-word}
 .card-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:5px;word-break:break-word}
 .card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px}
@@ -114,8 +116,10 @@ em{font-style:italic;color:var(--green)}
 
 /* ---------- MODAL ---------- */
 .overlay{position:fixed;inset:0;z-index:500;background:rgba(0,9,32,.55);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:48px 18px;overflow-y:auto}
-.overlay.show{display:flex}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 30px 80px rgba(0,9,32,.5);animation:fIn .3s var(--ease);overflow:hidden}
+.overlay.show{display:flex;animation:ovIn .22s var(--ease)}
+.overlay.closing{animation:ovOut .2s var(--ease) forwards}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 30px 80px rgba(0,9,32,.5);animation:modalIn .34s var(--ease);overflow:hidden}
+.overlay.closing .modal{animation:modalOut .2s var(--ease) forwards}
 .modal.wide{max-width:680px}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:.5px solid var(--border)}
 .modal-head h2{font-size:18px;font-weight:800;letter-spacing:-.4px;color:#16203a}
@@ -179,6 +183,12 @@ em{font-style:italic;color:var(--green)}
 .foot{text-align:center;padding:22px;color:rgba(255,255,255,.22);font-size:11px;font-weight:500}
 .foot span{color:rgba(255,255,255,.4)}
 @keyframes fIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+@keyframes ovOut{from{opacity:1}to{opacity:0}}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes modalOut{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(10px) scale(.98)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px}
 .modal-body::-webkit-scrollbar-thumb{background:#cdd9f0}
@@ -458,12 +468,32 @@ function recurDesc(r){
 
 /* ============================================================ RENDER ============================================================ */
 function render(){
+  // FLIP: guarda posiciones previas para animar el movimiento natural
+  const prev={};
+  document.querySelectorAll(".card").forEach(c=>{ prev[c.dataset.id]=c.getBoundingClientRect(); });
+
   document.getElementById("board").innerHTML = COLUMNS.map(col=>{
     const cards=state.tasks.filter(t=>t.status===col.id);
     return `<div class="col" data-col="${col.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
       <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${cards.length}</span></div>
       <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div></div>`;
   }).join("");
+
+  // FLIP: desliza cada tarjeta desde donde estaba hasta su nuevo lugar
+  document.querySelectorAll(".card").forEach(c=>{
+    const old=prev[c.dataset.id]; if(!old) return;           // tarjeta nueva -> usa fIn
+    const now=c.getBoundingClientRect();
+    const dx=old.left-now.left, dy=old.top-now.top;
+    if(!dx && !dy) return;
+    c.style.animation="none";
+    c.style.transition="none";
+    c.style.transform=`translate(${dx}px,${dy}px)`;
+    requestAnimationFrame(()=>{
+      c.style.transition="transform .46s var(--ease)";
+      c.style.transform="";
+    });
+    c.addEventListener("transitionend",function h(){ c.style.transition=""; c.style.animation=""; c.removeEventListener("transitionend",h); });
+  });
 }
 function cardHTML(t){
   const a=assigneeOf(t.assignee);
@@ -700,10 +730,14 @@ function importJSON(ev){
 }
 
 /* overlays */
-function showOv(id){ document.getElementById(id).classList.add("show"); }
-function closeOv(id){ document.getElementById(id).classList.remove("show"); }
-document.addEventListener("click",e=>{ if(e.target.classList.contains("overlay")) e.target.classList.remove("show"); });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.show").forEach(o=>o.classList.remove("show")); });
+function showOv(id){ const o=document.getElementById(id); o.classList.remove("closing"); o.classList.add("show"); }
+function closeOv(id){
+  const o=document.getElementById(id); if(!o.classList.contains("show")) return;
+  o.classList.add("closing");
+  setTimeout(()=>{ o.classList.remove("show","closing"); }, 200);
+}
+document.addEventListener("click",e=>{ if(e.target.classList.contains("overlay")) closeOv(e.target.id); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.show").forEach(o=>closeOv(o.id)); });
 
 /* ============================================================ INIT · candado EYE/181218 · © RLR ============================================================ */
 const _RLR_LOCK="EYE/181218";
