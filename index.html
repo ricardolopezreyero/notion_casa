@@ -186,6 +186,13 @@ em{font-style:italic;color:var(--green)}
 .empty-note{font-size:13px;color:var(--muted);text-align:center;padding:24px}
 .wa-btn{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;white-space:nowrap}
 .wa-btn:hover{background:#1eb955}
+.call-btn{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.call-btn:hover{background:var(--navy-mid)}
+.prov-actions{display:flex;gap:8px;margin-top:9px}
+.prov-actions:empty{display:none}
+.mini-wa,.mini-call{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:8px;text-decoration:none;transition:transform .2s var(--ease),background .2s}
+.mini-wa{background:#25D366;color:#fff}.mini-wa:hover{background:#1eb955;transform:translateY(-1px)}
+.mini-call{background:var(--navy);color:#fff}.mini-call:hover{background:var(--navy-mid);transform:translateY(-1px)}
 .prov-form{background:var(--blue-soft);border:.5px solid var(--border);border-radius:11px;padding:14px;margin-bottom:18px}
 
 .foot{text-align:center;padding:22px;color:rgba(255,255,255,.22);font-size:11px;font-weight:500}
@@ -241,7 +248,7 @@ em{font-style:italic;color:var(--green)}
       </div>
       <div class="row2">
         <div class="field"><label>Categoría (opcional)</label><select id="f-category"></select></div>
-        <div class="field"><label>Proveedor (opcional)</label><select id="f-provider"></select></div>
+        <div class="field"><label>Proveedor (opcional)</label><select id="f-provider" onchange="renderProvActions()"></select><div id="provActions" class="prov-actions"></div></div>
       </div>
       <div class="row2">
         <div class="field"><label>Costo estimado (opcional)</label><div class="cost-wrap"><span class="cost-sign">$</span><input type="number" id="f-cost" min="0" step="any" placeholder="0" inputmode="decimal"></div></div>
@@ -402,7 +409,7 @@ const COMMON = [
 ];
 
 /* ============================================================ ESTADO ============================================================ */
-let state = {tasks:[], recurring:[], providers:[]};
+let state = {tasks:[], recurring:[], providers:[], usage:{}};
 let db = null, suppress = false;
 let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "";
 
@@ -421,7 +428,7 @@ const waLink = ph => "https://wa.me/"+waDigits(ph);
 /* ---------- Persistencia ---------- */
 function load(){
   try{ const r=localStorage.getItem("board-"+BOARD_KEY); if(r) state=JSON.parse(r); }catch(e){}
-  state.tasks=state.tasks||[]; state.recurring=state.recurring||[]; state.providers=state.providers||[];
+  state.tasks=state.tasks||[]; state.recurring=state.recurring||[]; state.providers=state.providers||[]; state.usage=state.usage||{};
 }
 function persist(){
   localStorage.setItem("board-"+BOARD_KEY, JSON.stringify(state));
@@ -439,7 +446,7 @@ function initFirebase(){
       // Espejo de la nube. Si está vacía/null -> tablero vacío (sin reescribir, así sí se puede vaciar).
       ref.on("value", snap=>{
         const v=snap.val()||{};
-        suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[]}; suppress=false;
+        suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{}}; suppress=false;
         localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render();
       }, ()=>setSync(false));
     });
@@ -519,8 +526,8 @@ function cardHTML(t){
   const cost=(t.cost!==""&&t.cost!=null&&!isNaN(t.cost))?`<span class="pill pill-cost">${fmtMoney(t.cost)}</span>`:"";
   const p=t.provider?providerOf(t.provider):null;
   const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
-  return `<div class="card" draggable="true" data-id="${t.id}" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
-    <div class="card-actions"><button class="icon-btn" title="Editar" onclick="openNew('${t.id}')">✎</button><button class="icon-btn del" title="Borrar" onclick="delTask('${t.id}')">✕</button></div>
+  return `<div class="card" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
+    <div class="card-actions"><button class="icon-btn" title="Subir (más prioridad)" onclick="event.stopPropagation();moveTask('${t.id}',-1)">▲</button><button class="icon-btn" title="Bajar" onclick="event.stopPropagation();moveTask('${t.id}',1)">▼</button><button class="icon-btn del" title="Borrar" onclick="event.stopPropagation();delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
     ${t.note?`<div class="card-note">${esc(t.note)}</div>`:""}
     <div class="card-meta"><span class="pill ${a.cls}">${esc(a.name)}</span>${cat}${cost}${prov}${recur}${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}</div>
@@ -528,12 +535,22 @@ function cardHTML(t){
 }
 
 /* drag & drop */
-let dragId=null;
+let dragId=null, lastDragEnd=0;
 function onDragStart(e,id){ dragId=id; e.currentTarget.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; }
-function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); }
+function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); lastDragEnd=Date.now(); }
 function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add("drag-over"); }
 function onDragLeave(e){ e.currentTarget.classList.remove("drag-over"); }
 function onDrop(e,col){ e.preventDefault(); e.currentTarget.classList.remove("drag-over"); const t=state.tasks.find(x=>x.id===dragId); if(t&&t.status!==col){ t.status=col; persist(); render(); } dragId=null; }
+function cardClick(e,id){ if(Date.now()-lastDragEnd<250) return; openNew(id); }   // clic en toda la tarjeta abre detalle
+function moveTask(id,dir){
+  const i=state.tasks.findIndex(t=>t.id===id); if(i<0) return;
+  const st=state.tasks[i].status; let j=-1;
+  if(dir<0){ for(let k=i-1;k>=0;k--){ if(state.tasks[k].status===st){j=k;break;} } }
+  else { for(let k=i+1;k<state.tasks.length;k++){ if(state.tasks[k].status===st){j=k;break;} } }
+  if(j<0) return;
+  const tmp=state.tasks[i]; state.tasks[i]=state.tasks[j]; state.tasks[j]=tmp;
+  persist(); render();
+}
 
 /* ============================================================ MODAL TAREA / RECURRENTE ============================================================ */
 function fillSelectors(){
@@ -553,6 +570,12 @@ function setFilter(v){
 function fillProviderSelect(sel){
   document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+state.providers.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
   document.getElementById("f-provider").value = sel||"";
+  renderProvActions();
+}
+function renderProvActions(){
+  const id=document.getElementById("f-provider").value, p=id?providerOf(id):null, el=document.getElementById("provActions");
+  if(p && p.phone){ el.innerHTML = `<a class="mini-wa" href="${waLink(p.phone)}" target="_blank" rel="noopener">📲 WhatsApp</a><a class="mini-call" href="tel:+${waDigits(p.phone)}">📞 Llamar</a>`; }
+  else el.innerHTML = "";
 }
 function openNew(id){
   modalMode="task"; editingRecurId=null;
@@ -675,25 +698,38 @@ function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=st
 
 /* ============================================================ TAREAS COMUNES ============================================================ */
 function openCommon(){ document.getElementById("commonSearch").value=""; renderCommon(); showOv("ovCommon"); }
+function commonItemHTML(title,a,cat,existing){
+  const added=existing.has(title.toLowerCase());
+  return `<button class="common-item ${added?"added":""}" onclick="addCommon('${esc(title).replace(/'/g,"\\'")}','${a}','${esc(cat).replace(/'/g,"\\'")}',this)"><span>${esc(title)}</span><span class="add">${added?"✓ ya está":"＋ agregar"}</span></button>`;
+}
 function renderCommon(){
   const q=document.getElementById("commonSearch").value.toLowerCase().trim();
   const existing=new Set(state.tasks.filter(t=>t.status!=="completada").map(t=>t.title.toLowerCase()));
   let html="";
+
+  // Sin búsqueda: accesos rápidos arriba (Top 3 más usadas + Últimas 5 usadas)
+  if(!q){
+    const u=Object.values(state.usage||{}).filter(x=>x.count>0);
+    const top3=[...u].sort((a,b)=>b.count-a.count || b.last-a.last).slice(0,3);
+    const top3set=new Set(top3.map(x=>x.title.toLowerCase()));
+    const recent=[...u].sort((a,b)=>b.last-a.last).filter(x=>!top3set.has(x.title.toLowerCase())).slice(0,5);
+    if(top3.length)  html+=`<div class="cat-group"><h3>⭐ Top 3 más usadas</h3>`+top3.map(x=>commonItemHTML(x.title,x.a,x.cat,existing)).join("")+`</div>`;
+    if(recent.length)html+=`<div class="cat-group"><h3>🕘 Últimas 5 usadas</h3>`+recent.map(x=>commonItemHTML(x.title,x.a,x.cat,existing)).join("")+`</div>`;
+  }
+
   COMMON.forEach(g=>{
     const items=g.items.filter(it=>!q||it.toLowerCase().includes(q)||g.cat.toLowerCase().includes(q));
     if(!items.length) return;
     const who=assigneeOf(mapA(g.a)).name;
-    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(who)}</span></h3>`;
-    items.forEach(it=>{
-      const added=existing.has(it.toLowerCase());
-      html+=`<button class="common-item ${added?"added":""}" onclick="addCommon('${esc(it).replace(/'/g,"\\'")}','${mapA(g.a)}','${esc(g.cat).replace(/'/g,"\\'")}',this)"><span>${esc(it)}</span><span class="add">${added?"✓ ya está":"＋ agregar"}</span></button>`;
-    });
-    html+=`</div>`;
+    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(who)}</span></h3>`+items.map(it=>commonItemHTML(it,mapA(g.a),g.cat,existing)).join("")+`</div>`;
   });
   document.getElementById("commonList").innerHTML = html||'<div class="empty-note">Sin resultados.</div>';
 }
 function addCommon(title,assignee,category,btn){
   state.tasks.unshift({id:uid(),title,assignee,category,note:"",provider:"",cost:"",status:"porhacer",createdAt:Date.now(),date:todayStr()});
+  const k=title.toLowerCase(); state.usage=state.usage||{};
+  const prev=state.usage[k];
+  state.usage[k]={title,a:assignee,cat:category,count:(prev?prev.count:0)+1,last:Date.now()};
   persist(); render(); btn.classList.add("added"); btn.querySelector(".add").textContent="✓ agregada";
 }
 
@@ -717,7 +753,7 @@ function renderProviders(){
   const el=document.getElementById("provList");
   if(!state.providers.length){ el.innerHTML='<div class="empty-note">Aún no hay proveedores. Agrega el primero arriba ↑</div>'; return; }
   el.innerHTML=state.providers.map(p=>`<div class="prov-item"><div class="info"><div class="rt">${esc(p.name)}</div><div class="rd">${p.cat?esc(p.cat)+" · ":""}${esc(p.phone||"sin número")}</div></div>
-    ${p.phone?`<a class="wa-btn" href="${waLink(p.phone)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
+    ${p.phone?`<a class="wa-btn" href="${waLink(p.phone)}" target="_blank" rel="noopener">WhatsApp</a><a class="call-btn" href="tel:+${waDigits(p.phone)}">Llamar</a>`:""}
     <button class="icon-btn" style="width:28px;height:28px" title="Editar" onclick="editProvider('${p.id}')">✎</button>
     <button class="icon-btn del" style="width:28px;height:28px" title="Eliminar" onclick="delProvider('${p.id}')">✕</button></div>`).join("");
 }
