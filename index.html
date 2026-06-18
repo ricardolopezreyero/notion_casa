@@ -568,7 +568,7 @@ const assigneeOf = id => ASSIGNEES.find(a=>a.id===id) || ASSIGNEES[1];
 const mapA = id => A_MAP[id] || id;
 const providerOf = id => state.providers.find(p=>p.id===id);
 const waDigits = ph => { let d=(ph||"").replace(/\D/g,""); if(d.length===10) d="52"+d; return d; };
-const waLink = ph => "https://wa.me/"+waDigits(ph);
+const waLink = (ph,name) => "https://wa.me/"+waDigits(ph)+(name?"?text="+encodeURIComponent("Hola "+name):"");
 
 /* ---------- Catálogo de comunes (editable) ---------- */
 function defaultCommons(){ const a=[]; COMMON.forEach(g=>g.items.forEach(t=>a.push({id:uid(),title:t,a:mapA(g.a),cat:g.cat}))); return a; }
@@ -715,7 +715,7 @@ function cardHTML(t){
   const pr=PRIO[t.priority]||PRIO.baja;
   const prio=`<span class="pill pill-prio ${pr.c}"><span class="pd" style="background:${pr.d}"></span>${pr.t}</span>`;
   const p=t.provider?providerOf(t.provider):null;
-  const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
+  const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone,p.name)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.cat?p.cat+" · "+p.name:p.name)}</a>`:"";
   const doneCls=t.status==="completada"?" card-done":"";
   const emergeCls=(t.id===justCreatedId||(remoteAddedIds&&remoteAddedIds.has(t.id)))?" card-emerge":"";
   return `<div class="card${doneCls}${emergeCls}" style="--prio:${pr.d}" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
@@ -785,7 +785,7 @@ function onProviderChange(){
 }
 function renderProvActions(){
   const id=document.getElementById("f-provider").value, p=id?providerOf(id):null, el=document.getElementById("provActions");
-  if(p && p.phone){ el.innerHTML = `<a class="mini-wa" href="${waLink(p.phone)}" target="_blank" rel="noopener">📲 WhatsApp</a><a class="mini-call" href="tel:+${waDigits(p.phone)}">📞 Llamar</a>`; }
+  if(p && p.phone){ el.innerHTML = `<a class="mini-wa" href="${waLink(p.phone,p.name)}" target="_blank" rel="noopener">📲 WhatsApp</a><a class="mini-call" href="tel:+${waDigits(p.phone)}">📞 Llamar</a>`; }
   else el.innerHTML = "";
 }
 function openNew(id, presetCol){
@@ -1043,7 +1043,7 @@ function renderProviders(){
   if(!state.providers.length){ el.innerHTML='<div class="empty-note">Aún no hay proveedores. Agrega el primero arriba ↑</div>'; return; }
   const list=[...state.providers].sort((a,b)=>prefOf(a).localeCompare(prefOf(b)) || a.name.localeCompare(b.name));
   el.innerHTML=list.map(p=>{ const pf=prefOf(p); return `<div class="prov-item"><div class="info"><div class="rt">${esc(p.name)} <span class="pref-badge pref-${pf}">${PREF[pf]}</span></div><div class="rd">${p.cat?esc(p.cat)+" · ":""}${esc(p.phone||"sin número")}</div></div>
-    ${p.phone?`<a class="wa-btn" href="${waLink(p.phone)}" target="_blank" rel="noopener">WhatsApp</a><a class="call-btn" href="tel:+${waDigits(p.phone)}">Llamar</a>`:""}
+    ${p.phone?`<a class="wa-btn" href="${waLink(p.phone,p.name)}" target="_blank" rel="noopener">WhatsApp</a><a class="call-btn" href="tel:+${waDigits(p.phone)}">Llamar</a>`:""}
     <button class="icon-btn" style="width:28px;height:28px" title="Editar" onclick="editProvider('${p.id}')">✎</button>
     <button class="icon-btn del" style="width:28px;height:28px" title="Eliminar" onclick="delProvider('${p.id}')">✕</button></div>`; }).join("");
 }
