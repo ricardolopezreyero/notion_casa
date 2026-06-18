@@ -191,6 +191,10 @@ em{font-style:italic;color:var(--green)}
 .common-item .add{margin-left:auto;font-size:11px;font-weight:700;color:var(--green-d);white-space:nowrap}
 .common-item.added{opacity:.5;pointer-events:none}
 .common-item.added .add{color:var(--muted)}
+.common-item.editing{cursor:default;gap:8px}
+.common-item.editing:hover{transform:none;border-color:var(--border);background:#fff}
+.ci-edit{flex:1;min-width:0;font-family:inherit;font-size:13px;color:#16203a;border:.5px solid var(--border);border-radius:7px;padding:8px 10px;background:#fff}
+.ci-edit:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,57,200,.1)}
 
 .recur-item,.prov-item{display:flex;align-items:center;gap:12px;padding:12px;border:.5px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fff}
 .recur-item .info,.prov-item .info{flex:1;min-width:0}
@@ -332,7 +336,18 @@ em{font-style:italic;color:var(--green)}
   <div class="modal wide">
     <div class="modal-head"><div><h2>⭐ Tareas comunes</h2><div class="sub">Un clic la agrega a "Reserva"</div></div><button class="x" onclick="closeOv('ovCommon')">✕</button></div>
     <div class="modal-body">
-      <div class="field" style="margin-bottom:14px"><input type="text" id="commonSearch" placeholder="🔎 Buscar tarea..." oninput="renderCommon()" autocomplete="off"></div>
+      <div style="display:flex;gap:10px;align-items:stretch;margin-bottom:14px">
+        <div class="field" style="flex:1;margin:0"><input type="text" id="commonSearch" placeholder="🔎 Buscar tarea..." oninput="renderCommon()" autocomplete="off"></div>
+        <button class="btn btn-cancel" id="commonEditBtn" style="white-space:nowrap" onclick="toggleCommonEdit()">✏️ Editar</button>
+      </div>
+      <div id="commonAddForm" class="prov-form" style="display:none">
+        <div class="field" style="margin-bottom:10px"><label>Nueva tarea común</label><input type="text" id="nc-title" placeholder="Ej. Revisar medidor de agua" autocomplete="off"></div>
+        <div class="row2">
+          <div class="field" style="margin-bottom:10px"><label>Categoría</label><select id="nc-cat"></select></div>
+          <div class="field" style="margin-bottom:10px"><label>Responsable</label><select id="nc-assignee"></select></div>
+        </div>
+        <button class="btn btn-green" onclick="addCommonDef()">＋ Agregar al catálogo</button>
+      </div>
       <div id="commonList"></div>
     </div>
   </div>
@@ -444,10 +459,10 @@ const COMMON = [
 ];
 
 /* ============================================================ ESTADO ============================================================ */
-let state = {tasks:[], recurring:[], providers:[], usage:{}};
+let state = {tasks:[], recurring:[], providers:[], usage:{}, commons:[]};
 let db = null, suppress = false, lastWrite = 0;
 let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "", curPrio = "baja";
-let completedShown = 10, justCreatedId = null;
+let completedShown = 10, justCreatedId = null, commonEdit = false;
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
@@ -461,10 +476,15 @@ const providerOf = id => state.providers.find(p=>p.id===id);
 const waDigits = ph => { let d=(ph||"").replace(/\D/g,""); if(d.length===10) d="52"+d; return d; };
 const waLink = ph => "https://wa.me/"+waDigits(ph);
 
+/* ---------- Catálogo de comunes (editable) ---------- */
+function defaultCommons(){ const a=[]; COMMON.forEach(g=>g.items.forEach(t=>a.push({id:uid(),title:t,a:mapA(g.a),cat:g.cat}))); return a; }
+const seedCommons = arr => (Array.isArray(arr)&&arr.length) ? arr : defaultCommons();
+
 /* ---------- Persistencia ---------- */
 function load(){
   try{ const r=localStorage.getItem("board-"+BOARD_KEY); if(r) state=JSON.parse(r); }catch(e){}
   state.tasks=state.tasks||[]; state.recurring=state.recurring||[]; state.providers=state.providers||[]; state.usage=state.usage||{};
+  state.commons=seedCommons(state.commons);
 }
 function persist(){
   localStorage.setItem("board-"+BOARD_KEY, JSON.stringify(state));
@@ -482,7 +502,7 @@ function initFirebase(){
       // Espejo de la nube. Si está vacía/null -> tablero vacío (sin reescribir, así sí se puede vaciar).
       ref.on("value", snap=>{
         const v=snap.val()||{};
-        const incoming={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{}};
+        const incoming={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{},commons:seedCommons(v.commons)};
         localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(incoming));
         suppress=true; state=incoming; suppress=false;
         // Si es el eco de nuestro propio cambio reciente, ya renderizamos local -> no re-render (preserva animaciones)
@@ -614,6 +634,8 @@ function fillSelectors(){
   const cats=[...new Set(COMMON.map(g=>g.cat))];
   document.getElementById("f-category").innerHTML = `<option value="">— Sin categoría —</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
   document.getElementById("filterAssignee").innerHTML = `<option value="">👥 Todos</option>`+ASSIGNEES.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("");
+  document.getElementById("nc-cat").innerHTML = cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  document.getElementById("nc-assignee").innerHTML = ASSIGNEES.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("");
 }
 function setFilter(v){
   filterA=v;
@@ -757,7 +779,36 @@ function saveTask(){
 function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
 
 /* ============================================================ TAREAS COMUNES ============================================================ */
-function openCommon(){ document.getElementById("commonSearch").value=""; renderCommon(); showOv("ovCommon"); }
+function openCommon(){ document.getElementById("commonSearch").value=""; commonEdit=false; document.getElementById("commonEditBtn").textContent="✏️ Editar"; document.getElementById("commonAddForm").style.display="none"; renderCommon(); showOv("ovCommon"); }
+function commonGroups(){
+  const map=new Map();
+  (state.commons||[]).forEach(it=>{ const k=it.cat+"|"+it.a; if(!map.has(k)) map.set(k,{cat:it.cat,a:it.a,items:[]}); map.get(k).items.push(it); });
+  return [...map.values()];
+}
+function toggleCommonEdit(){
+  commonEdit=!commonEdit;
+  document.getElementById("commonEditBtn").textContent=commonEdit?"✓ Listo":"✏️ Editar";
+  document.getElementById("commonAddForm").style.display=commonEdit?"block":"none";
+  renderCommon();
+}
+function commonEditRow(it){
+  return `<div class="common-item editing"><input class="ci-edit" value="${esc(it.title)}" onchange="editCommonItem('${it.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"><button class="icon-btn del" style="flex:none" title="Eliminar del catálogo" onclick="delCommonItem('${it.id}')">✕</button></div>`;
+}
+function editCommonItem(id,val){
+  const it=(state.commons||[]).find(x=>x.id===id); if(!it) return;
+  const v=val.trim(); if(!v){ delCommonItem(id); return; }
+  it.title=v; persist();
+}
+function delCommonItem(id){
+  state.commons=(state.commons||[]).filter(x=>x.id!==id); persist(); renderCommon();
+}
+function addCommonDef(){
+  const title=document.getElementById("nc-title").value.trim();
+  if(!title){ document.getElementById("nc-title").focus(); return; }
+  state.commons=state.commons||[];
+  state.commons.push({id:uid(),title,a:document.getElementById("nc-assignee").value,cat:document.getElementById("nc-cat").value});
+  document.getElementById("nc-title").value=""; persist(); renderCommon(); document.getElementById("nc-title").focus();
+}
 function commonItemHTML(title,a,cat,existing){
   const added=existing.has(title.toLowerCase());
   return `<button class="common-item ${added?"added":""}" onclick="addCommon('${esc(title).replace(/'/g,"\\'")}','${a}','${esc(cat).replace(/'/g,"\\'")}',this)"><span>${esc(title)}</span><span class="add">${added?"✓ ya está":"＋ agregar"}</span></button>`;
@@ -767,8 +818,8 @@ function renderCommon(){
   const existing=new Set(state.tasks.filter(t=>t.status!=="completada").map(t=>t.title.toLowerCase()));
   let html="";
 
-  // Sin búsqueda: accesos rápidos arriba (Top 3 más usadas + Últimas 5 usadas)
-  if(!q){
+  // Sin búsqueda ni edición: accesos rápidos arriba (Top 3 más usadas + Últimas 5 usadas)
+  if(!q && !commonEdit){
     const u=Object.values(state.usage||{}).filter(x=>x.count>0);
     const top3=[...u].sort((a,b)=>b.count-a.count || b.last-a.last).slice(0,3);
     const top3set=new Set(top3.map(x=>x.title.toLowerCase()));
@@ -777,11 +828,11 @@ function renderCommon(){
     if(recent.length)html+=`<div class="cat-group"><h3>🕘 Últimas 5 usadas</h3>`+recent.map(x=>commonItemHTML(x.title,x.a,x.cat,existing)).join("")+`</div>`;
   }
 
-  COMMON.forEach(g=>{
-    const items=g.items.filter(it=>!q||it.toLowerCase().includes(q)||g.cat.toLowerCase().includes(q));
+  commonGroups().forEach(g=>{
+    const items=g.items.filter(it=>!q||it.title.toLowerCase().includes(q)||g.cat.toLowerCase().includes(q));
     if(!items.length) return;
-    const who=assigneeOf(mapA(g.a)).name;
-    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(who)}</span></h3>`+items.map(it=>commonItemHTML(it,mapA(g.a),g.cat,existing)).join("")+`</div>`;
+    const who=assigneeOf(g.a).name;
+    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(who)}</span></h3>`+items.map(it=> commonEdit ? commonEditRow(it) : commonItemHTML(it.title,it.a,it.cat,existing)).join("")+`</div>`;
   });
   document.getElementById("commonList").innerHTML = html||'<div class="empty-note">Sin resultados.</div>';
 }
