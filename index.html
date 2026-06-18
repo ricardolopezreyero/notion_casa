@@ -100,6 +100,7 @@ em{font-style:italic;color:var(--green)}
 .pill-recur{background:#FFF4E0;color:#B8730A;display:inline-flex;align-items:center;gap:3px}
 .pill-prov{background:#E6F8EE;color:#127a44;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:700;text-transform:none;letter-spacing:0;font-size:10px}
 .pill-prov:hover{background:#cdf0dc}
+.pill-cost{background:#FFF3DC;color:#9A6B00;font-weight:800;text-transform:none;letter-spacing:0;font-size:10px}
 .card-date{font-size:10px;color:var(--dim);font-weight:600;margin-left:auto}
 .card-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
 .card:hover .card-actions{opacity:1}
@@ -160,6 +161,9 @@ em{font-style:italic;color:var(--green)}
 .inline-int span{font-size:13px;font-weight:600;color:#16203a}
 .inline-int input[type=number]{width:74px}
 .inline-int select{width:auto;min-width:108px}
+.cost-wrap{position:relative}
+.cost-wrap .cost-sign{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:700;color:var(--muted);pointer-events:none}
+.cost-wrap input{padding-left:26px!important}
 
 /* catalog */
 .cat-group{margin-bottom:18px}
@@ -234,6 +238,10 @@ em{font-style:italic;color:var(--green)}
       <div class="row2">
         <div class="field"><label>Categoría (opcional)</label><input type="text" id="f-category" placeholder="Ej. Mantenimiento" list="catList" autocomplete="off"><datalist id="catList"></datalist></div>
         <div class="field"><label>Proveedor (opcional)</label><select id="f-provider"></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Costo estimado (opcional)</label><div class="cost-wrap"><span class="cost-sign">$</span><input type="number" id="f-cost" min="0" step="any" placeholder="0" inputmode="decimal"></div></div>
+        <div class="field"></div>
       </div>
       <div class="field"><label>Nota (opcional)</label><textarea id="f-note" placeholder="Detalles, lugar, lo que se necesita..."></textarea></div>
 
@@ -399,6 +407,7 @@ const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d
 const addDays = (s,n) => { const d=new Date(s+"T00:00:00"); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 const fmtDate = s => { if(!s) return ""; const d=new Date(s+(s.length===10?"T00:00:00":"")); return d.toLocaleDateString("es-MX",{day:"numeric",month:"short"}); };
 const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtMoney = n => "$"+Number(n).toLocaleString("es-MX",{maximumFractionDigits:2});
 const assigneeOf = id => ASSIGNEES.find(a=>a.id===id) || ASSIGNEES[1];
 const mapA = id => A_MAP[id] || id;
 const providerOf = id => state.providers.find(p=>p.id===id);
@@ -450,7 +459,7 @@ function runRecurring(){
   let added=false;
   state.recurring.forEach(r=>{
     if(dueToday(r)){
-      state.tasks.unshift({id:uid(),title:r.title,assignee:r.assignee,category:r.category||"",provider:r.provider||"",note:"",status:"porhacer",recurId:r.id,createdAt:Date.now(),date:todayStr()});
+      state.tasks.unshift({id:uid(),title:r.title,assignee:r.assignee,category:r.category||"",provider:r.provider||"",cost:(r.cost!==""&&r.cost!=null)?r.cost:"",note:"",status:"porhacer",recurId:r.id,createdAt:Date.now(),date:todayStr()});
       advance(r); added=true;
     }
   });
@@ -496,13 +505,14 @@ function cardHTML(t){
   const a=assigneeOf(t.assignee);
   const recur=t.recurId?`<span class="pill pill-recur">🔁 auto</span>`:"";
   const cat=t.category?`<span class="pill pill-cat">${esc(t.category)}</span>`:"";
+  const cost=(t.cost!==""&&t.cost!=null&&!isNaN(t.cost))?`<span class="pill pill-cost">${fmtMoney(t.cost)}</span>`:"";
   const p=t.provider?providerOf(t.provider):null;
   const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
   return `<div class="card" draggable="true" data-id="${t.id}" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
     <div class="card-actions"><button class="icon-btn" title="Editar" onclick="openNew('${t.id}')">✎</button><button class="icon-btn del" title="Borrar" onclick="delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
     ${t.note?`<div class="card-note">${esc(t.note)}</div>`:""}
-    <div class="card-meta"><span class="pill ${a.cls}">${esc(a.name)}</span>${cat}${prov}${recur}${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}</div>
+    <div class="card-meta"><span class="pill ${a.cls}">${esc(a.name)}</span>${cat}${cost}${prov}${recur}${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}</div>
   </div>`;
 }
 
@@ -544,12 +554,14 @@ function openNew(id){
     document.getElementById("f-assignee").value=t.assignee;
     document.getElementById("f-status").value=t.status;
     document.getElementById("f-category").value=t.category||"";
+    document.getElementById("f-cost").value=(t.cost!==""&&t.cost!=null)?t.cost:"";
     document.getElementById("f-note").value=t.note||"";
   } else {
     document.getElementById("f-title").value="";
     document.getElementById("f-assignee").value="ricardo";
     document.getElementById("f-status").value="porhacer";
     document.getElementById("f-category").value="";
+    document.getElementById("f-cost").value="";
     document.getElementById("f-note").value="";
   }
   showOv("ovNew"); setTimeout(()=>document.getElementById("f-title").focus(),60);
@@ -570,6 +582,7 @@ function openRecurForm(id){
     document.getElementById("f-title").value=r.title;
     document.getElementById("f-assignee").value=r.assignee;
     document.getElementById("f-category").value=r.category||"";
+    document.getElementById("f-cost").value=(r.cost!==""&&r.cost!=null)?r.cost:"";
     document.getElementById("f-note").value="";
     if(r.freq==="weekly"){ setRecModeById("weekly"); curDays=[...(r.days||[])]; document.querySelectorAll("#dayChips .chip").forEach(c=>c.classList.toggle("on",curDays.includes(+c.dataset.day))); }
     else if(r.freq==="monthly"){ setRecModeById("monthly"); document.getElementById("f-dom").value=r.dayOfMonth||1; }
@@ -579,6 +592,7 @@ function openRecurForm(id){
     document.getElementById("f-title").value="";
     document.getElementById("f-assignee").value="ricardo";
     document.getElementById("f-category").value="";
+    document.getElementById("f-cost").value="";
     document.getElementById("f-note").value="";
   }
   showOv("ovNew"); setTimeout(()=>document.getElementById("f-title").focus(),60);
@@ -603,8 +617,9 @@ function setRecModeById(mode){
 }
 function toggleDay(btn){ const d=+btn.dataset.day; btn.classList.toggle("on"); curDays.includes(d)?curDays=curDays.filter(x=>x!==d):curDays.push(d); }
 
+function readCost(){ const v=document.getElementById("f-cost").value.trim(); return v===""?"":Math.max(0,parseFloat(v)||0); }
 function readRecurRule(){
-  const rule={title:document.getElementById("f-title").value.trim(), assignee:document.getElementById("f-assignee").value, category:document.getElementById("f-category").value.trim(), provider:document.getElementById("f-provider").value, lastGenerated:""};
+  const rule={title:document.getElementById("f-title").value.trim(), assignee:document.getElementById("f-assignee").value, category:document.getElementById("f-category").value.trim(), provider:document.getElementById("f-provider").value, cost:readCost(), lastGenerated:""};
   if(curRecMode==="interval"){ rule.freq=document.getElementById("f-unit").value; rule.interval=Math.max(1,parseInt(document.getElementById("f-interval").value)||1); rule.nextDue=document.getElementById("f-next").value||todayStr(); }
   else if(curRecMode==="weekly"){ if(!curDays.length){ alert("Elige al menos un día."); return null; } rule.freq="weekly"; rule.days=[...curDays]; }
   else { rule.freq="monthly"; rule.dayOfMonth=+document.getElementById("f-dom").value; }
@@ -615,6 +630,7 @@ function saveTask(){
   if(!title){ document.getElementById("f-title").focus(); return; }
   const provider=document.getElementById("f-provider").value;
   const category=document.getElementById("f-category").value.trim();
+  const cost=readCost();
 
   // modo recurrente (editar o nueva recurrencia)
   if(modalMode==="recur"){
@@ -634,8 +650,8 @@ function saveTask(){
     const rule=readRecurRule(); if(!rule) return; rule.id=uid(); state.recurring.push(rule);
     runRecurring(); persist(); render(); closeOv("ovNew"); return;
   }
-  if(id){ Object.assign(state.tasks.find(x=>x.id===id),{title,assignee,status,category,note,provider}); }
-  else { state.tasks.unshift({id:uid(),title,assignee,category,note,provider,status,createdAt:Date.now(),date:todayStr()}); }
+  if(id){ Object.assign(state.tasks.find(x=>x.id===id),{title,assignee,status,category,note,provider,cost}); }
+  else { state.tasks.unshift({id:uid(),title,assignee,category,note,provider,cost,status,createdAt:Date.now(),date:todayStr()}); }
   persist(); render(); closeOv("ovNew");
 }
 function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
@@ -660,7 +676,7 @@ function renderCommon(){
   document.getElementById("commonList").innerHTML = html||'<div class="empty-note">Sin resultados.</div>';
 }
 function addCommon(title,assignee,category,btn){
-  state.tasks.unshift({id:uid(),title,assignee,category,note:"",provider:"",status:"porhacer",createdAt:Date.now(),date:todayStr()});
+  state.tasks.unshift({id:uid(),title,assignee,category,note:"",provider:"",cost:"",status:"porhacer",createdAt:Date.now(),date:todayStr()});
   persist(); render(); btn.classList.add("added"); btn.querySelector(".add").textContent="✓ agregada";
 }
 
