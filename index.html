@@ -10,6 +10,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🏡 Casa López Acosta · Tablero</title>
+<link rel="icon" href="https://assets.cdn.filesafe.space/E6Gh1sE1RnPtadmL7wmG/media/68bdf4dd6d0aaa7737d9cfdd.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
@@ -20,17 +21,15 @@
   --blue:#0039C8; --blue-mid:#2A89FB; --blue-soft:#F4F7FF; --blue-softer:#EEF2FF;
   --border:#e0e8f8; --muted:#666; --dim:#aaa;
   --ease:cubic-bezier(.16,1,.3,1);
-  /* responsables */
-  --r-ricardo:#0039C8; --r-ana:#C0399B; --r-dos:#002582; --r-michelle:#E0820C; --r-disp:#5a6478;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+button{font-family:inherit;cursor:pointer;border:none}
 body{
   font-family:"Plus Jakarta Sans",system-ui,sans-serif;
   background:var(--navy-deep); color:#1a1a1a;
   -webkit-font-smoothing:antialiased;
 }
-button{font-family:inherit;cursor:pointer;border:none}
 em{font-style:italic;color:var(--green)}
 
 /* ---------- NAV ---------- */
@@ -42,11 +41,9 @@ em{font-style:italic;color:var(--green)}
   border-bottom:.5px solid rgba(86,239,159,.12);
   backdrop-filter:blur(16px);
 }
-.nav-left{display:flex;align-items:center;gap:16px;min-width:0}
-.nav-logo img{height:26px;display:block}
-.nav-title{
-  font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;white-space:nowrap;
-}
+.nav-left{display:flex;align-items:center;gap:13px;min-width:0}
+.nav-mark{height:30px;width:30px;border-radius:8px;object-fit:cover;flex:none}
+.nav-title{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;white-space:nowrap}
 .nav-title span{color:var(--green)}
 .nav-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .sync-pill{
@@ -71,96 +68,71 @@ em{font-style:italic;color:var(--green)}
 .btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff;transform:translateY(-1px)}
 
 /* ---------- BOARD ---------- */
-.board-wrap{padding:22px 28px 60px}
-.board{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(248px,1fr));
-  gap:16px;align-items:start;
-}
+.board-wrap{padding:22px 28px 40px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(248px,1fr));gap:16px;align-items:start}
 .col{
   background:rgba(255,255,255,.04);
   border:.5px solid rgba(255,255,255,.07);
-  border-radius:14px;padding:12px 10px 14px;
-  min-height:200px;transition:border-color .2s,background .2s;
+  border-radius:14px;padding:12px 10px 14px;min-height:200px;transition:border-color .2s,background .2s;
 }
 .col.drag-over{border-color:rgba(86,239,159,.45);background:rgba(86,239,159,.05)}
 .col-head{display:flex;align-items:center;gap:8px;padding:4px 6px 12px}
 .col-dot{width:9px;height:9px;border-radius:50%;flex:none}
 .col-name{font-size:12px;font-weight:800;letter-spacing:.2px;color:#fff;text-transform:uppercase}
-.col-count{
-  margin-left:auto;font-size:11px;font-weight:700;color:#7a9fd4;
-  background:rgba(255,255,255,.06);border-radius:20px;padding:2px 9px;min-width:24px;text-align:center;
-}
+.col-count{margin-left:auto;font-size:11px;font-weight:700;color:#7a9fd4;background:rgba(255,255,255,.06);border-radius:20px;padding:2px 9px;min-width:24px;text-align:center}
 .col-body{display:flex;flex-direction:column;gap:9px;min-height:30px}
 .col-empty{font-size:11px;color:#3a5a9a;text-align:center;padding:18px 6px;font-weight:500}
 
 /* ---------- CARD ---------- */
 .card{
-  background:#fff;border:.5px solid var(--border);border-radius:11px;
-  padding:11px 12px 10px;cursor:grab;position:relative;
-  transition:transform .25s var(--ease),box-shadow .25s;
-  animation:fIn .3s var(--ease);
+  background:#fff;border:.5px solid var(--border);border-radius:11px;padding:11px 12px 10px;
+  cursor:grab;position:relative;transition:transform .25s var(--ease),box-shadow .25s;animation:fIn .3s var(--ease);
 }
 .card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,18,64,.22)}
 .card.dragging{opacity:.45;cursor:grabbing}
 .card-title{font-size:13.5px;font-weight:700;line-height:1.32;letter-spacing:-.2px;color:#16203a;padding-right:34px;word-break:break-word}
 .card-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:5px;word-break:break-word}
 .card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px}
-.pill{
-  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-  padding:3px 9px;border-radius:20px;white-space:nowrap;
-}
+.pill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:20px;white-space:nowrap}
 .pill-cat{background:var(--blue-softer);color:var(--blue);font-weight:600;text-transform:none;letter-spacing:0;font-size:10px}
 .pill-recur{background:#FFF4E0;color:#B8730A;display:inline-flex;align-items:center;gap:3px}
+.pill-prov{background:#E6F8EE;color:#127a44;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:700;text-transform:none;letter-spacing:0;font-size:10px}
+.pill-prov:hover{background:#cdf0dc}
 .card-date{font-size:10px;color:var(--dim);font-weight:600;margin-left:auto}
 .card-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
 .card:hover .card-actions{opacity:1}
-.icon-btn{
-  width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
-  background:transparent;color:#9aa7c4;font-size:12px;line-height:1;
-}
+.icon-btn{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:transparent;color:#9aa7c4;font-size:12px;line-height:1}
 .icon-btn:hover{background:var(--blue-soft);color:var(--navy)}
 .icon-btn.del:hover{background:#FFECEC;color:#D33}
 
+/* responsable pills */
+.r-ana{background:rgba(192,57,155,.12);color:#C0399B}
+.r-ricardo{background:rgba(0,57,200,.1);color:#0039C8}
+.r-michelle{background:rgba(224,130,12,.13);color:#E0820C}
+.r-eloisa{background:rgba(14,140,110,.14);color:#0E8C6E}
+.r-lulu{background:rgba(122,63,192,.13);color:#7A3FC0}
+
 /* ---------- MODAL ---------- */
-.overlay{
-  position:fixed;inset:0;z-index:500;background:rgba(0,9,32,.55);
-  backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;
-  padding:48px 18px;overflow-y:auto;
-}
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,9,32,.55);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:48px 18px;overflow-y:auto}
 .overlay.show{display:flex}
-.modal{
-  background:#fff;border-radius:16px;width:100%;max-width:520px;
-  box-shadow:0 30px 80px rgba(0,9,32,.5);animation:fIn .3s var(--ease);
-  overflow:hidden;
-}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 30px 80px rgba(0,9,32,.5);animation:fIn .3s var(--ease);overflow:hidden}
 .modal.wide{max-width:680px}
-.modal-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:20px 24px 14px;border-bottom:.5px solid var(--border);
-}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:.5px solid var(--border)}
 .modal-head h2{font-size:18px;font-weight:800;letter-spacing:-.4px;color:#16203a}
 .modal-head .sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
 .x{width:30px;height:30px;border-radius:8px;background:var(--blue-soft);color:var(--navy);font-size:16px;display:grid;place-items:center}
 .x:hover{background:var(--blue-softer)}
-.modal-body{padding:20px 24px 24px;max-height:62vh;overflow-y:auto}
+.modal-body{padding:20px 24px 24px;max-height:64vh;overflow-y:auto}
 .field{margin-bottom:15px}
 .field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--navy);margin-bottom:7px}
-.field input[type=text],.field textarea,.field select{
-  width:100%;font-family:inherit;font-size:14px;color:#16203a;
-  border:.5px solid var(--border);border-radius:9px;padding:11px 13px;background:#fff;
-  transition:border-color .2s,box-shadow .2s;
+.field input[type=text],.field input[type=tel],.field input[type=number],.field input[type=date],.field textarea,.field select{
+  width:100%;font-family:inherit;font-size:14px;color:#16203a;border:.5px solid var(--border);border-radius:9px;padding:11px 13px;background:#fff;transition:border-color .2s,box-shadow .2s;
 }
-.field input:focus,.field textarea:focus,.field select:focus{
-  outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,57,200,.1);
-}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,57,200,.1)}
 .field textarea{resize:vertical;min-height:64px;line-height:1.5}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
-.chip{
-  font-size:12px;font-weight:600;padding:7px 13px;border-radius:8px;
-  background:var(--blue-soft);color:var(--navy);border:.5px solid transparent;transition:.15s;
-}
+.chip{font-size:12px;font-weight:600;padding:7px 13px;border-radius:8px;background:var(--blue-soft);color:var(--navy);border:.5px solid transparent;transition:.15s}
 .chip:hover{background:var(--blue-softer)}
 .chip.on{background:var(--navy);color:#fff}
 .daychip{min-width:40px;text-align:center}
@@ -170,7 +142,6 @@ em{font-style:italic;color:var(--green)}
 .btn-cancel:hover{background:var(--blue-soft);color:var(--navy);transform:none}
 .help{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
 
-/* recur toggle */
 .recur-box{border:.5px solid var(--border);border-radius:11px;padding:14px;background:var(--blue-soft);margin-top:4px}
 .recur-box.off .recur-opts{display:none}
 .switch{display:flex;align-items:center;gap:10px;cursor:pointer}
@@ -181,79 +152,62 @@ em{font-style:italic;color:var(--green)}
 .switch input:checked + .track::after{left:19px}
 .switch .lbl{font-size:13px;font-weight:700;color:#16203a}
 .recur-opts{margin-top:14px}
+.inline-int{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.inline-int span{font-size:13px;font-weight:600;color:#16203a}
+.inline-int input[type=number]{width:74px}
+.inline-int select{width:auto;min-width:108px}
 
-/* common tasks catalog */
+/* catalog */
 .cat-group{margin-bottom:18px}
-.cat-group h3{
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--blue);
-  margin-bottom:9px;display:flex;align-items:center;gap:7px;
-}
+.cat-group h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:9px;display:flex;align-items:center;gap:7px}
 .cat-group h3 .who{font-size:9px;background:var(--blue-softer);color:var(--blue);padding:2px 8px;border-radius:20px;letter-spacing:.5px}
-.common-item{
-  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  background:#fff;border:.5px solid var(--border);border-radius:9px;
-  padding:10px 12px;margin-bottom:6px;font-size:13px;font-weight:500;color:#16203a;transition:.15s;
-}
+.common-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:.5px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:6px;font-size:13px;font-weight:500;color:#16203a;transition:.15s}
 .common-item:hover{border-color:var(--blue);background:var(--blue-soft);transform:translateX(2px)}
 .common-item .add{margin-left:auto;font-size:11px;font-weight:700;color:var(--green-d);white-space:nowrap}
 .common-item.added{opacity:.5;pointer-events:none}
 .common-item.added .add{color:var(--muted)}
-.search-box{margin-bottom:16px}
 
-/* recurring list */
-.recur-item{display:flex;align-items:center;gap:12px;padding:12px;border:.5px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fff}
-.recur-item .info{flex:1;min-width:0}
-.recur-item .rt{font-size:13.5px;font-weight:700;color:#16203a}
-.recur-item .rd{font-size:11.5px;color:var(--muted);margin-top:3px}
-.recur-empty{font-size:13px;color:var(--muted);text-align:center;padding:24px}
+.recur-item,.prov-item{display:flex;align-items:center;gap:12px;padding:12px;border:.5px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fff}
+.recur-item .info,.prov-item .info{flex:1;min-width:0}
+.recur-item .rt,.prov-item .rt{font-size:13.5px;font-weight:700;color:#16203a}
+.recur-item .rd,.prov-item .rd{font-size:11.5px;color:var(--muted);margin-top:3px}
+.empty-note{font-size:13px;color:var(--muted);text-align:center;padding:24px}
+.wa-btn{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.wa-btn:hover{background:#1eb955}
+.prov-form{background:var(--blue-soft);border:.5px solid var(--border);border-radius:11px;padding:14px;margin-bottom:18px}
 
-/* responsable pill colors */
-.r-ricardo{background:rgba(0,57,200,.1);color:var(--r-ricardo)}
-.r-ana{background:rgba(192,57,155,.12);color:var(--r-ana)}
-.r-dos{background:rgba(0,37,130,.1);color:var(--r-dos)}
-.r-michelle{background:rgba(224,130,12,.13);color:var(--r-michelle)}
-.r-disp{background:rgba(90,100,120,.12);color:var(--r-disp)}
-
-.foot{text-align:center;padding:24px;color:rgba(255,255,255,.22);font-size:11px;font-weight:500}
+.foot{text-align:center;padding:22px;color:rgba(255,255,255,.22);font-size:11px;font-weight:500}
 .foot span{color:rgba(255,255,255,.4)}
-
 @keyframes fIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px}
 .modal-body::-webkit-scrollbar-thumb{background:#cdd9f0}
-
-@media(max-width:1100px){
-  .board{display:flex;overflow-x:auto;gap:14px;padding-bottom:14px}
-  .col{min-width:262px}
-}
+@media(max-width:1100px){.board{display:flex;overflow-x:auto;gap:14px;padding-bottom:14px}.col{min-width:262px}}
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="nav-left">
-    <a class="nav-logo" href="#" onclick="return false"><img src="https://assets.cdn.filesafe.space/E6Gh1sE1RnPtadmL7wmG/media/698e530bc08665d629146a14.png" alt="SuperLeads"></a>
+    <img class="nav-mark" src="https://assets.cdn.filesafe.space/E6Gh1sE1RnPtadmL7wmG/media/68bdf4dd6d0aaa7737d9cfdd.png" alt="">
     <div class="nav-title">🏡 Casa <span>López Acosta</span></div>
   </div>
   <div class="nav-actions">
     <span id="syncPill" class="sync-pill local"><span class="dot"></span><span id="syncTxt">Local</span></span>
     <button class="btn btn-green" onclick="openNew()">＋ Nueva tarea</button>
-    <button class="btn btn-ghost" onclick="openCommon()">⭐ Tarea común</button>
+    <button class="btn btn-ghost" onclick="openCommon()">⭐ Comunes</button>
     <button class="btn btn-ghost" onclick="openRecur()">🔁 Recurrentes</button>
+    <button class="btn btn-ghost" onclick="openProviders()">📇 Proveedores</button>
     <button class="btn btn-ghost" onclick="exportJSON()">⬇︎</button>
     <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆︎</button>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
   </div>
 </nav>
 
-<div class="board-wrap">
-  <div class="board" id="board"></div>
-</div>
+<div class="board-wrap"><div class="board" id="board"></div></div>
+<div class="foot">Tablero de la casa · se guarda solo</div>
 
-<div class="foot">Tablero de la casa · estilo <span>SuperLeads</span> · se guarda solo</div>
-
-<!-- ============ MODAL: NUEVA / EDITAR ============ -->
+<!-- ============ MODAL: NUEVA / EDITAR TAREA / RECURRENTE ============ -->
 <div class="overlay" id="ovNew">
   <div class="modal">
     <div class="modal-head">
@@ -267,51 +221,50 @@ em{font-style:italic;color:var(--green)}
         <input type="text" id="f-title" placeholder="Ej. arreglar la llave de la puerta" autocomplete="off">
       </div>
       <div class="row2">
-        <div class="field">
-          <label>Responsable</label>
-          <select id="f-assignee"></select>
-        </div>
-        <div class="field">
-          <label>Columna</label>
-          <select id="f-status"></select>
-        </div>
+        <div class="field"><label>Responsable</label><select id="f-assignee"></select></div>
+        <div class="field" id="statusField"><label>Columna</label><select id="f-status"></select></div>
       </div>
-      <div class="field">
-        <label>Categoría (opcional)</label>
-        <input type="text" id="f-category" placeholder="Ej. Mantenimiento" list="catList" autocomplete="off">
-        <datalist id="catList"></datalist>
+      <div class="row2">
+        <div class="field"><label>Categoría (opcional)</label><input type="text" id="f-category" placeholder="Ej. Mantenimiento" list="catList" autocomplete="off"><datalist id="catList"></datalist></div>
+        <div class="field"><label>Proveedor (opcional)</label><select id="f-provider"></select></div>
       </div>
-      <div class="field">
-        <label>Nota (opcional)</label>
-        <textarea id="f-note" placeholder="Detalles, lugar, lo que se necesita..."></textarea>
-      </div>
+      <div class="field"><label>Nota (opcional)</label><textarea id="f-note" placeholder="Detalles, lugar, lo que se necesita..."></textarea></div>
 
       <div class="field" id="recurField">
         <label>¿Es recurrente?</label>
         <div class="recur-box off" id="recurBox">
-          <label class="switch">
+          <label class="switch" id="recurSwitch">
             <input type="checkbox" id="f-recur" onchange="toggleRecur()">
-            <span class="track"></span>
-            <span class="lbl">Repetir automáticamente</span>
+            <span class="track"></span><span class="lbl">Repetir automáticamente</span>
           </label>
           <div class="recur-opts">
             <div class="field" style="margin-top:14px;margin-bottom:12px">
-              <label>Frecuencia</label>
-              <div class="chips" id="freqChips">
-                <button class="chip on" data-freq="daily" onclick="setFreq(this)">Diaria</button>
-                <button class="chip" data-freq="weekly" onclick="setFreq(this)">Semanal</button>
-                <button class="chip" data-freq="monthly" onclick="setFreq(this)">Mensual</button>
+              <label>Tipo de repetición</label>
+              <div class="chips" id="recModeChips">
+                <button class="chip on" data-mode="interval" onclick="setRecMode(this)">Cada cierto tiempo</button>
+                <button class="chip" data-mode="weekly" onclick="setRecMode(this)">Días de la semana</button>
+                <button class="chip" data-mode="monthly" onclick="setRecMode(this)">Día del mes</button>
+              </div>
+            </div>
+            <div class="field" id="intervalOpts" style="margin-bottom:10px">
+              <label>Intervalo</label>
+              <div class="inline-int">
+                <span>Cada</span>
+                <input type="number" id="f-interval" min="1" max="365" value="3">
+                <select id="f-unit"><option value="weeks">semanas</option><option value="days">días</option></select>
+              </div>
+              <div class="field" style="margin:12px 0 0">
+                <label>Próxima vez</label>
+                <input type="date" id="f-next">
               </div>
             </div>
             <div class="field" id="weeklyOpts" style="display:none;margin-bottom:8px">
-              <label>¿Qué días?</label>
-              <div class="chips" id="dayChips"></div>
+              <label>¿Qué días?</label><div class="chips" id="dayChips"></div>
             </div>
             <div class="field" id="monthlyOpts" style="display:none;margin-bottom:8px">
-              <label>Día del mes</label>
-              <select id="f-dom"></select>
+              <label>Día del mes</label><select id="f-dom"></select>
             </div>
-            <p class="help">Cada vez que toque, se crea una tarea nueva en <b>Por hacer</b> automáticamente.</p>
+            <p class="help">Cada vez que toque, se crea una tarea nueva en <b>Por hacer</b>. Puedes cambiar el intervalo o mover la "próxima vez" cuando cambie la temporada.</p>
           </div>
         </div>
       </div>
@@ -326,14 +279,9 @@ em{font-style:italic;color:var(--green)}
 <!-- ============ MODAL: TAREAS COMUNES ============ -->
 <div class="overlay" id="ovCommon">
   <div class="modal wide">
-    <div class="modal-head">
-      <div><h2>⭐ Tareas comunes</h2><div class="sub">Un clic la agrega a "Por hacer"</div></div>
-      <button class="x" onclick="closeOv('ovCommon')">✕</button>
-    </div>
+    <div class="modal-head"><div><h2>⭐ Tareas comunes</h2><div class="sub">Un clic la agrega a "Por hacer"</div></div><button class="x" onclick="closeOv('ovCommon')">✕</button></div>
     <div class="modal-body">
-      <div class="search-box field" style="margin-bottom:14px">
-        <input type="text" id="commonSearch" placeholder="🔎 Buscar tarea..." oninput="renderCommon()" autocomplete="off">
-      </div>
+      <div class="field" style="margin-bottom:14px"><input type="text" id="commonSearch" placeholder="🔎 Buscar tarea..." oninput="renderCommon()" autocomplete="off"></div>
       <div id="commonList"></div>
     </div>
   </div>
@@ -342,29 +290,40 @@ em{font-style:italic;color:var(--green)}
 <!-- ============ MODAL: RECURRENTES ============ -->
 <div class="overlay" id="ovRecur">
   <div class="modal">
-    <div class="modal-head">
-      <div><h2>🔁 Tareas recurrentes</h2><div class="sub">Se generan solas en "Por hacer"</div></div>
-      <button class="x" onclick="closeOv('ovRecur')">✕</button>
-    </div>
+    <div class="modal-head"><div><h2>🔁 Tareas recurrentes</h2><div class="sub">Se generan solas en "Por hacer"</div></div><button class="x" onclick="closeOv('ovRecur')">✕</button></div>
     <div class="modal-body">
       <div id="recurList"></div>
-      <button class="btn btn-lg btn-green" style="width:100%;justify-content:center;margin-top:6px" onclick="closeOv('ovRecur');openNew(null,true)">＋ Nueva recurrente</button>
+      <button class="btn btn-lg btn-green" style="width:100%;justify-content:center;margin-top:6px" onclick="closeOv('ovRecur');openRecurForm()">＋ Nueva recurrente</button>
     </div>
   </div>
 </div>
 
-<!-- Firebase SDK (compat) -->
+<!-- ============ MODAL: PROVEEDORES ============ -->
+<div class="overlay" id="ovProv">
+  <div class="modal">
+    <div class="modal-head"><div><h2>📇 Proveedores</h2><div class="sub">Nombre + celular → botón de WhatsApp</div></div><button class="x" onclick="closeOv('ovProv')">✕</button></div>
+    <div class="modal-body">
+      <div class="prov-form">
+        <input type="hidden" id="p-id">
+        <div class="row2">
+          <div class="field" style="margin-bottom:10px"><label>Nombre / servicio</label><input type="text" id="p-name" placeholder="Ej. Jardinero Pedro" autocomplete="off"></div>
+          <div class="field" style="margin-bottom:10px"><label>Celular</label><input type="tel" id="p-phone" placeholder="55 1234 5678" autocomplete="off"></div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Categoría (opcional)</label><input type="text" id="p-cat" placeholder="Ej. Jardinería, Plomería, Alberca" list="catList" autocomplete="off"></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-green" onclick="saveProvider()" id="p-save">＋ Guardar proveedor</button><button class="btn btn-cancel" onclick="resetProvForm()" style="display:none" id="p-cancel">Cancelar</button></div>
+        <p class="help" id="p-hint">El número de México (10 dígitos) arma el link de WhatsApp automáticamente.</p>
+      </div>
+      <div id="provList"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
 <script>
 /* ============================================================
    CONFIG · candado EYE/181218 · autoría RLR
-   ------------------------------------------------------------
-   👉 PARA ACTIVAR LA SINCRONIZACIÓN ENTRE DISPOSITIVOS:
-      pega aquí abajo la config de tu proyecto Firebase.
-      (Mientras esté el placeholder, el tablero funciona en
-       modo LOCAL en esta computadora — y ya sirve.)
+   👉 Para sincronizar entre dispositivos, pega aquí tu config Firebase.
    ============================================================ */
 const FIREBASE_CONFIG = {
   apiKey: "PEGA_AQUI_TU_API_KEY",
@@ -373,9 +332,8 @@ const FIREBASE_CONFIG = {
   projectId: "PEGA_AQUI",
   appId: "PEGA_AQUI"
 };
-const BOARD_KEY = "casa-lopez-acosta"; // ruta/identificador del tablero compartido
+const BOARD_KEY = "casa-lopez-acosta";
 
-/* ---------- Constantes ---------- */
 const COLUMNS = [
   {id:"reserva",   name:"Reserva",              color:"#7a9fd4"},
   {id:"porhacer",  name:"Por hacer",            color:"#2A89FB"},
@@ -384,170 +342,150 @@ const COLUMNS = [
   {id:"completada",name:"Completada",           color:"#2BC878"},
 ];
 const ASSIGNEES = [
-  {id:"ricardo", name:"Ricardo",            cls:"r-ricardo"},
-  {id:"ana",     name:"Ana",                cls:"r-ana"},
-  {id:"dos",     name:"Los dos",            cls:"r-dos"},
-  {id:"michelle",name:"Michelle",           cls:"r-michelle"},
-  {id:"disp",    name:"Quien esté disponible",cls:"r-disp"},
+  {id:"ana",     name:"Ana Acosta",   cls:"r-ana"},
+  {id:"ricardo", name:"Ricardo López",cls:"r-ricardo"},
+  {id:"michelle",name:"Michelle",     cls:"r-michelle"},
+  {id:"eloisa",  name:"Eloisa",       cls:"r-eloisa"},
+  {id:"lulu",    name:"Lulu",         cls:"r-lulu"},
 ];
+/* mapeo del catálogo viejo -> responsables actuales */
+const A_MAP = {ricardo:"ricardo", ana:"ana", michelle:"michelle", dos:"ricardo", disp:"ana"};
 const DAYS = [{i:1,t:"Lun"},{i:2,t:"Mar"},{i:3,t:"Mié"},{i:4,t:"Jue"},{i:5,t:"Vie"},{i:6,t:"Sáb"},{i:0,t:"Dom"}];
 
-/* ---------- Catálogo de tareas comunes (del documento del hogar) ---------- */
 const COMMON = [
- {cat:"Finanzas del hogar", who:"Ricardo", a:"ricardo", items:["Pago de renta","Seguimiento de reposiciones y reembolsos del seguro de gastos médicos","Administración del fondo de caja chica de la casa"]},
- {cat:"Finanzas del hogar", who:"Ana", a:"ana", items:["Pago de servicios (luz, agua, gas, internet, teléfono, streaming)","Pago de colegiatura","Seguimiento de adeudos de colegiatura","Pago de terapias","Pago de sueldos del personal del hogar","Fondeo de caja chica de la casa","Subsidios de apoyo económico para Galia EU y México"]},
- {cat:"Finanzas del hogar", who:"Los dos", a:"dos", items:["Corte trimestral de finanzas familiares","Planeación de gastos extraordinarios"]},
- {cat:"Compras y abastecimiento", who:"Ricardo", a:"ricardo", items:["Habilitar iPad y capacitar a Anai para cargar la lista los martes"]},
- {cat:"Compras y abastecimiento", who:"Ana", a:"ana", items:["Autorizar súper de Anai","Compra de artículos de limpieza","Compra de artículos de higiene personal","Compra de medicamentos","Compra de compromisos para eventos","Control de inventario del hogar","Planeación básica de comidas"]},
- {cat:"Compras y abastecimiento", who:"Los dos", a:"dos", items:["Escribir en el pizarrón lo que hace falta"]},
- {cat:"Personal y mantenimiento", who:"Ricardo", a:"ricardo", items:["Contratar personal de servicio","Acordar sueldos y forma de pago","Alta y baja de personal","Mantenimiento general de la casa (plomería, electricidad, pintura)","Mantenimiento de electrodomésticos y aparatos","Coordinación con técnicos y proveedores","Jardín, plantas interiores y áreas exteriores","Tintorería","Limpieza de sillones, colchones y sillas","Fumigación"]},
- {cat:"Personal y mantenimiento", who:"Ana", a:"ana", items:["Definir funciones y horarios","Capacitación y explicación de rutinas","Permisos y comunicación con el personal","Supervisión del trabajo","Resolución de incidencias"]},
- {cat:"Organización e imagen de la casa", who:"Ana", a:"ana", items:["Orden general de la casa","Organización de closets","Revisión y depuración","Donar / vender / tirar","Control de blancos","Decoración cotidiana","Decoración por temporada (Navidad y fechas especiales)","Cuidar la imagen estética del hogar","Guardar decoraciones fuera de temporada"]},
- {cat:"Galia · Rutina diaria", who:"Ricardo", a:"ricardo", items:["Despertar a Galia 7:15 am","Llevarla al colegio","Recogerla del colegio (Lun y Vie)","Bañar y dormir a Galia (Lun y Mar)"]},
- {cat:"Galia · Rutina diaria", who:"Ana", a:"ana", items:["Preparar el desayuno","Prepararla para el día","Preparar lonchera","Preparar mochila","Revisar avisos y tareas","Recogerla del colegio (Mié y Jue)","Bañar y dormir a Galia (Mié, Jue y Dom)"]},
- {cat:"Galia · Rutina diaria", who:"Michelle", a:"michelle", items:["Recogerla del colegio (Martes)"]},
- {cat:"Galia · Salud y desarrollo", who:"Ricardo", a:"ricardo", items:["Control de vacunas","Corte de pelo"]},
- {cat:"Galia · Salud y desarrollo", who:"Ana", a:"ana", items:["Seguimiento con dentista","Seguimiento con oftalmólogo","Seguimiento con endocrinólogo","Seguimiento con neurólogo","Seguimiento con terapeuta motriz","Seguimiento con terapeuta de lenguaje","Control de peso y talla","Corte de uñas"]},
- {cat:"Galia · Salud y desarrollo", who:"Quien esté disponible", a:"disp", items:["Llevar a Galia al pediatra (enfermedad)","Agendar cita médica","Traslado y acompañamiento","Seguimiento a diagnóstico","Compra y administración de medicamentos"]},
- {cat:"Galia · Terapias", who:"Ana", a:"ana", items:["Coordinación con terapeutas","Seguimiento de ejercicios en casa","Compra y preparación de materiales terapéuticos","Aplicación de recomendaciones","Comunicación terapia–colegio","Seguimiento de avances y ajustes"]},
- {cat:"Galia · Juguetes", who:"Ana", a:"ana", items:["Revisión de juguetes","Inventario de juguetes","Limpieza periódica de juguetes","Depuración de juguetes fuera de etapa","Actualización de juguetes acordes al desarrollo","Donación o resguardo"]},
- {cat:"Galia · Colegio", who:"Ricardo", a:"ricardo", items:["Comunicación con el colegio","Atención a solicitudes (materiales, disfraces)","Compra de materiales escolares","Preparación y compra de disfraces","Eventos escolares","Seguimiento del calendario escolar","Detalle para maestras (día del maestro)","Detalle para compañeros (14 feb y Navidad)"]},
- {cat:"Galia · Ropa", who:"Ana", a:"ana", items:["Revisión de ropa que ya no le queda","Depuración y donación","Compra de ropa nueva","Compra de zapatos","Organización de su ropa"]},
- {cat:"Vida social y eventos", who:"Ana", a:"ana", items:["Llevar a Galia a piñatas","Confirmar asistencias a eventos","Organización de convivencias fuera de casa","Invitar a la casa y organizar logística","Llevar lo necesario a reuniones","Llevar agenda social"]},
- {cat:"Regalos y celebraciones", who:"Ana", a:"ana", items:["Compra de regalos (amigos, ahijados, sobrinos)","Regalos de Navidad (familia)","Regalos de cumpleaños (familia)","Regalos de Galia (definir / comprar / envolver)","Organización del cumpleaños / piñata de Galia","Detalles para niños del salón (Navidad / 14 feb)"]},
- {cat:"Compromisos familia y amigos", who:"Ana", a:"ana", items:["Llevar agenda de compromisos","Priorizar compromisos","Confirmar fechas, horarios y sedes","Definir, comprar y preparar lo que se lleva","Organización de tiempos entre compromisos"]},
- {cat:"Logística familiar y de pareja", who:"Ricardo", a:"ricardo", items:["Organización de fines de semana y puentes","Planeación y organización de vacaciones","Reservas (vuelos, hoteles, actividades)","Planeación de tiempos de descanso"]},
- {cat:"Logística familiar y de pareja", who:"Ana", a:"ana", items:["Espacios de tiempo en pareja","Búsqueda de terapeuta de pareja","Agendado y confirmación de sesiones","Seguimiento a acuerdos de pareja"]},
- {cat:"Documentos y temas legales", who:"Los dos", a:"dos", items:["Seguimiento a vencimiento de pasaportes","Seguimiento a vencimiento de visas","Archivo de documentos oficiales"]},
+ {cat:"Finanzas del hogar", a:"ricardo", items:["Pago de renta","Seguimiento de reposiciones y reembolsos del seguro de gastos médicos","Administración del fondo de caja chica de la casa"]},
+ {cat:"Finanzas del hogar", a:"ana", items:["Pago de servicios (luz, agua, gas, internet, teléfono, streaming)","Pago de colegiatura","Seguimiento de adeudos de colegiatura","Pago de terapias","Pago de sueldos del personal del hogar","Fondeo de caja chica de la casa","Subsidios de apoyo económico para Galia EU y México"]},
+ {cat:"Finanzas del hogar", a:"dos", items:["Corte trimestral de finanzas familiares","Planeación de gastos extraordinarios"]},
+ {cat:"Compras y abastecimiento", a:"ricardo", items:["Habilitar iPad y capacitar a Anai para cargar la lista los martes"]},
+ {cat:"Compras y abastecimiento", a:"ana", items:["Autorizar súper de Anai","Compra de artículos de limpieza","Compra de artículos de higiene personal","Compra de medicamentos","Compra de compromisos para eventos","Control de inventario del hogar","Planeación básica de comidas"]},
+ {cat:"Compras y abastecimiento", a:"dos", items:["Escribir en el pizarrón lo que hace falta"]},
+ {cat:"Personal y mantenimiento", a:"ricardo", items:["Contratar personal de servicio","Acordar sueldos y forma de pago","Alta y baja de personal","Mantenimiento general de la casa (plomería, electricidad, pintura)","Mantenimiento de electrodomésticos y aparatos","Coordinación con técnicos y proveedores","Jardín, plantas interiores y áreas exteriores","Tintorería","Limpieza de sillones, colchones y sillas","Fumigación"]},
+ {cat:"Personal y mantenimiento", a:"ana", items:["Definir funciones y horarios","Capacitación y explicación de rutinas","Permisos y comunicación con el personal","Supervisión del trabajo","Resolución de incidencias"]},
+ {cat:"Organización e imagen de la casa", a:"ana", items:["Orden general de la casa","Organización de closets","Revisión y depuración","Donar / vender / tirar","Control de blancos","Decoración cotidiana","Decoración por temporada (Navidad y fechas especiales)","Cuidar la imagen estética del hogar","Guardar decoraciones fuera de temporada"]},
+ {cat:"Galia · Rutina diaria", a:"ricardo", items:["Despertar a Galia 7:15 am","Llevarla al colegio","Recogerla del colegio (Lun y Vie)","Bañar y dormir a Galia (Lun y Mar)"]},
+ {cat:"Galia · Rutina diaria", a:"ana", items:["Preparar el desayuno","Prepararla para el día","Preparar lonchera","Preparar mochila","Revisar avisos y tareas","Recogerla del colegio (Mié y Jue)","Bañar y dormir a Galia (Mié, Jue y Dom)"]},
+ {cat:"Galia · Rutina diaria", a:"michelle", items:["Recogerla del colegio (Martes)"]},
+ {cat:"Galia · Salud y desarrollo", a:"ricardo", items:["Control de vacunas","Corte de pelo"]},
+ {cat:"Galia · Salud y desarrollo", a:"ana", items:["Seguimiento con dentista","Seguimiento con oftalmólogo","Seguimiento con endocrinólogo","Seguimiento con neurólogo","Seguimiento con terapeuta motriz","Seguimiento con terapeuta de lenguaje","Control de peso y talla","Corte de uñas"]},
+ {cat:"Galia · Salud y desarrollo", a:"disp", items:["Llevar a Galia al pediatra (enfermedad)","Agendar cita médica","Traslado y acompañamiento","Seguimiento a diagnóstico","Compra y administración de medicamentos"]},
+ {cat:"Galia · Terapias", a:"ana", items:["Coordinación con terapeutas","Seguimiento de ejercicios en casa","Compra y preparación de materiales terapéuticos","Aplicación de recomendaciones","Comunicación terapia–colegio","Seguimiento de avances y ajustes"]},
+ {cat:"Galia · Juguetes", a:"ana", items:["Revisión de juguetes","Inventario de juguetes","Limpieza periódica de juguetes","Depuración de juguetes fuera de etapa","Actualización de juguetes acordes al desarrollo","Donación o resguardo"]},
+ {cat:"Galia · Colegio", a:"ricardo", items:["Comunicación con el colegio","Atención a solicitudes (materiales, disfraces)","Compra de materiales escolares","Preparación y compra de disfraces","Eventos escolares","Seguimiento del calendario escolar","Detalle para maestras (día del maestro)","Detalle para compañeros (14 feb y Navidad)"]},
+ {cat:"Galia · Ropa", a:"ana", items:["Revisión de ropa que ya no le queda","Depuración y donación","Compra de ropa nueva","Compra de zapatos","Organización de su ropa"]},
+ {cat:"Vida social y eventos", a:"ana", items:["Llevar a Galia a piñatas","Confirmar asistencias a eventos","Organización de convivencias fuera de casa","Invitar a la casa y organizar logística","Llevar lo necesario a reuniones","Llevar agenda social"]},
+ {cat:"Regalos y celebraciones", a:"ana", items:["Compra de regalos (amigos, ahijados, sobrinos)","Regalos de Navidad (familia)","Regalos de cumpleaños (familia)","Regalos de Galia (definir / comprar / envolver)","Organización del cumpleaños / piñata de Galia","Detalles para niños del salón (Navidad / 14 feb)"]},
+ {cat:"Compromisos familia y amigos", a:"ana", items:["Llevar agenda de compromisos","Priorizar compromisos","Confirmar fechas, horarios y sedes","Definir, comprar y preparar lo que se lleva","Organización de tiempos entre compromisos"]},
+ {cat:"Logística familiar y de pareja", a:"ricardo", items:["Organización de fines de semana y puentes","Planeación y organización de vacaciones","Reservas (vuelos, hoteles, actividades)","Planeación de tiempos de descanso"]},
+ {cat:"Logística familiar y de pareja", a:"ana", items:["Espacios de tiempo en pareja","Búsqueda de terapeuta de pareja","Agendado y confirmación de sesiones","Seguimiento a acuerdos de pareja"]},
+ {cat:"Documentos y temas legales", a:"dos", items:["Seguimiento a vencimiento de pasaportes","Seguimiento a vencimiento de visas","Archivo de documentos oficiales"]},
 ];
 
-/* ============================================================
-   ESTADO
-   ============================================================ */
-let state = {tasks:[], recurring:[]};
-let db = null, syncing = false, suppress = false;
-let curFreq = "daily", curDays = [], editingRecur = false;
+/* ============================================================ ESTADO ============================================================ */
+let state = {tasks:[], recurring:[], providers:[]};
+let db = null, suppress = false;
+let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null;
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const fmtDate = s => { if(!s) return ""; const d=new Date(s); return d.toLocaleDateString("es-MX",{day:"numeric",month:"short"}); };
+const addDays = (s,n) => { const d=new Date(s+"T00:00:00"); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const fmtDate = s => { if(!s) return ""; const d=new Date(s+(s.length===10?"T00:00:00":"")); return d.toLocaleDateString("es-MX",{day:"numeric",month:"short"}); };
 const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const assigneeOf = id => ASSIGNEES.find(a=>a.id===id) || ASSIGNEES[2];
+const assigneeOf = id => ASSIGNEES.find(a=>a.id===id) || ASSIGNEES[1];
+const mapA = id => A_MAP[id] || id;
+const providerOf = id => state.providers.find(p=>p.id===id);
+const waDigits = ph => { let d=(ph||"").replace(/\D/g,""); if(d.length===10) d="52"+d; return d; };
+const waLink = ph => "https://wa.me/"+waDigits(ph);
 
 /* ---------- Persistencia ---------- */
 function load(){
   try{ const r=localStorage.getItem("board-"+BOARD_KEY); if(r) state=JSON.parse(r); }catch(e){}
-  if(!state.tasks) state.tasks=[]; if(!state.recurring) state.recurring=[];
+  state.tasks=state.tasks||[]; state.recurring=state.recurring||[]; state.providers=state.providers||[];
 }
 function persist(){
   localStorage.setItem("board-"+BOARD_KEY, JSON.stringify(state));
   if(db && !suppress){ db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
 }
-
-/* ---------- Firebase ---------- */
 function initFirebase(){
   if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA")===0){ setSync(false); return; }
   try{
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.database();
-    setSync(true);
+    firebase.initializeApp(FIREBASE_CONFIG); db=firebase.database(); setSync(true);
     db.ref("boards/"+BOARD_KEY).on("value", snap=>{
-      const val = snap.val();
-      if(val){ suppress=true; state={tasks:val.tasks||[],recurring:val.recurring||[]}; suppress=false; localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render(); }
+      const v=snap.val();
+      if(v){ suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[]}; suppress=false; localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render(); }
       else { db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
-    }, ()=>{ setSync(false); });
+    }, ()=>setSync(false));
   }catch(e){ setSync(false); }
 }
 function setSync(on){
-  syncing=on;
   const p=document.getElementById("syncPill"), t=document.getElementById("syncTxt");
-  if(on){ p.classList.remove("local"); t.textContent="Sincronizado"; }
-  else { p.classList.add("local"); t.textContent="Local"; }
+  if(on){ p.classList.remove("local"); t.textContent="Sincronizado"; } else { p.classList.add("local"); t.textContent="Local"; }
 }
 
-/* ============================================================
-   RECURRENCIA — genera instancias en "Por hacer"
-   ============================================================ */
+/* ============================================================ RECURRENCIA ============================================================ */
+function dueToday(r){
+  const today=todayStr();
+  if(r.lastGenerated===today) return false;
+  if(r.freq==="days"||r.freq==="weeks") return (r.nextDue||today) <= today;
+  const now=new Date(), dow=now.getDay(), dom=now.getDate();
+  if(r.freq==="weekly") return (r.days||[]).includes(dow);
+  if(r.freq==="monthly"){ const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(); return dom===Math.min(r.dayOfMonth||1,last); }
+  return false;
+}
+function advance(r){
+  const today=todayStr();
+  if(r.freq==="days") r.nextDue=addDays(today, Math.max(1,r.interval||1));
+  else if(r.freq==="weeks") r.nextDue=addDays(today, Math.max(1,r.interval||1)*7);
+  r.lastGenerated=today;
+}
 function runRecurring(){
-  const today = todayStr(), now = new Date(), dow = now.getDay(), dom = now.getDate();
-  let added = false;
+  let added=false;
   state.recurring.forEach(r=>{
-    if(r.lastGenerated === today) return;
-    let due=false;
-    if(r.freq==="daily") due=true;
-    else if(r.freq==="weekly") due=(r.days||[]).includes(dow);
-    else if(r.freq==="monthly"){
-      const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
-      const target=Math.min(r.dayOfMonth||1,last);
-      due=(dom===target);
-    }
-    if(due){
-      state.tasks.unshift({
-        id:uid(), title:r.title, assignee:r.assignee, category:r.category||"",
-        note:"", status:"porhacer", recurId:r.id, createdAt:Date.now(), date:today
-      });
-      r.lastGenerated = today; added=true;
+    if(dueToday(r)){
+      state.tasks.unshift({id:uid(),title:r.title,assignee:r.assignee,category:r.category||"",provider:r.provider||"",note:"",status:"porhacer",recurId:r.id,createdAt:Date.now(),date:todayStr()});
+      advance(r); added=true;
     }
   });
   if(added) persist();
 }
+function recurDesc(r){
+  if(r.freq==="days")  return "Cada "+(r.interval||1)+" día"+((r.interval||1)>1?"s":"")+" · próxima "+fmtDate(r.nextDue);
+  if(r.freq==="weeks") return "Cada "+(r.interval||1)+" semana"+((r.interval||1)>1?"s":"")+" · próxima "+fmtDate(r.nextDue);
+  if(r.freq==="weekly")return "Días: "+(r.days||[]).map(x=>DAYS.find(y=>y.i===x).t).join(", ");
+  return "Cada mes el día "+r.dayOfMonth;
+}
 
-/* ============================================================
-   RENDER
-   ============================================================ */
+/* ============================================================ RENDER ============================================================ */
 function render(){
-  const board=document.getElementById("board");
-  board.innerHTML = COLUMNS.map(col=>{
-    const cards = state.tasks.filter(t=>t.status===col.id);
-    return `<div class="col" data-col="${col.id}"
-        ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
-      <div class="col-head">
-        <span class="col-dot" style="background:${col.color}"></span>
-        <span class="col-name">${col.name}</span>
-        <span class="col-count">${cards.length}</span>
-      </div>
-      <div class="col-body">
-        ${cards.length ? cards.map(cardHTML).join("") : '<div class="col-empty">—</div>'}
-      </div>
-    </div>`;
+  document.getElementById("board").innerHTML = COLUMNS.map(col=>{
+    const cards=state.tasks.filter(t=>t.status===col.id);
+    return `<div class="col" data-col="${col.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
+      <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${cards.length}</span></div>
+      <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div></div>`;
   }).join("");
 }
 function cardHTML(t){
   const a=assigneeOf(t.assignee);
-  const recur = t.recurId ? `<span class="pill pill-recur">🔁 auto</span>` : "";
-  const cat = t.category ? `<span class="pill pill-cat">${esc(t.category)}</span>` : "";
-  return `<div class="card" draggable="true" data-id="${t.id}"
-      ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
-    <div class="card-actions">
-      <button class="icon-btn" title="Editar" onclick="openNew('${t.id}')">✎</button>
-      <button class="icon-btn del" title="Borrar" onclick="delTask('${t.id}')">✕</button>
-    </div>
+  const recur=t.recurId?`<span class="pill pill-recur">🔁 auto</span>`:"";
+  const cat=t.category?`<span class="pill pill-cat">${esc(t.category)}</span>`:"";
+  const p=t.provider?providerOf(t.provider):null;
+  const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
+  return `<div class="card" draggable="true" data-id="${t.id}" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
+    <div class="card-actions"><button class="icon-btn" title="Editar" onclick="openNew('${t.id}')">✎</button><button class="icon-btn del" title="Borrar" onclick="delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
     ${t.note?`<div class="card-note">${esc(t.note)}</div>`:""}
-    <div class="card-meta">
-      <span class="pill ${a.cls}">${esc(a.name)}</span>
-      ${cat}${recur}
-      ${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}
-    </div>
+    <div class="card-meta"><span class="pill ${a.cls}">${esc(a.name)}</span>${cat}${prov}${recur}${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}</div>
   </div>`;
 }
 
-/* ---------- Drag & drop ---------- */
+/* drag & drop */
 let dragId=null;
 function onDragStart(e,id){ dragId=id; e.currentTarget.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; }
 function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); }
 function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add("drag-over"); }
 function onDragLeave(e){ e.currentTarget.classList.remove("drag-over"); }
-function onDrop(e,col){
-  e.preventDefault(); e.currentTarget.classList.remove("drag-over");
-  const t=state.tasks.find(x=>x.id===dragId);
-  if(t && t.status!==col){ t.status=col; persist(); render(); }
-  dragId=null;
-}
+function onDrop(e,col){ e.preventDefault(); e.currentTarget.classList.remove("drag-over"); const t=state.tasks.find(x=>x.id===dragId); if(t&&t.status!==col){ t.status=col; persist(); render(); } dragId=null; }
 
-/* ============================================================
-   MODAL NUEVA / EDITAR
-   ============================================================ */
+/* ============================================================ MODAL TAREA / RECURRENTE ============================================================ */
 function fillSelectors(){
   document.getElementById("f-assignee").innerHTML = ASSIGNEES.map(a=>`<option value="${a.id}">${a.name}</option>`).join("");
   document.getElementById("f-status").innerHTML = COLUMNS.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
@@ -556,23 +494,21 @@ function fillSelectors(){
   const cats=[...new Set(COMMON.map(g=>g.cat))];
   document.getElementById("catList").innerHTML = cats.map(c=>`<option value="${c}">`).join("");
 }
-function openNew(id, asRecur){
-  editingRecur = !!asRecur;
-  const isEdit = !!id;
-  document.getElementById("f-id").value = id||"";
-  document.getElementById("newTitle").textContent = isEdit?"Editar tarea":(asRecur?"Nueva tarea recurrente":"Nueva tarea");
-  document.getElementById("newSub").textContent = asRecur?"Se generará sola en Por hacer":"Cae en \"Por hacer\"";
-  document.getElementById("recurField").style.display = isEdit ? "none" : "block";
-
-  // reset recur
-  curFreq="daily"; curDays=[];
-  document.getElementById("f-recur").checked = !!asRecur;
-  document.getElementById("recurBox").classList.toggle("off", !asRecur);
-  document.querySelectorAll("#freqChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.freq==="daily"));
-  document.querySelectorAll("#dayChips .chip").forEach(c=>c.classList.remove("on"));
-  document.getElementById("weeklyOpts").style.display="none";
-  document.getElementById("monthlyOpts").style.display="none";
-
+function fillProviderSelect(sel){
+  document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+state.providers.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  document.getElementById("f-provider").value = sel||"";
+}
+function openNew(id){
+  modalMode="task"; editingRecurId=null;
+  const isEdit=!!id;
+  document.getElementById("f-id").value=id||"";
+  document.getElementById("newTitle").textContent=isEdit?"Editar tarea":"Nueva tarea";
+  document.getElementById("newSub").textContent=isEdit?"Edita y guarda":"Cae en \"Por hacer\"";
+  document.getElementById("statusField").style.display="block";
+  document.getElementById("recurField").style.display=isEdit?"none":"block";
+  document.getElementById("recurSwitch").style.display="flex";
+  resetRecurForm(false);
+  fillProviderSelect(isEdit ? (state.tasks.find(x=>x.id===id)||{}).provider : "");
   if(isEdit){
     const t=state.tasks.find(x=>x.id===id);
     document.getElementById("f-title").value=t.title;
@@ -582,141 +518,192 @@ function openNew(id, asRecur){
     document.getElementById("f-note").value=t.note||"";
   } else {
     document.getElementById("f-title").value="";
-    document.getElementById("f-assignee").value="dos";
+    document.getElementById("f-assignee").value="ricardo";
     document.getElementById("f-status").value="porhacer";
     document.getElementById("f-category").value="";
     document.getElementById("f-note").value="";
   }
-  showOv("ovNew");
-  setTimeout(()=>document.getElementById("f-title").focus(),60);
+  showOv("ovNew"); setTimeout(()=>document.getElementById("f-title").focus(),60);
 }
-function toggleRecur(){
-  document.getElementById("recurBox").classList.toggle("off", !document.getElementById("f-recur").checked);
+function openRecurForm(id){
+  modalMode="recur"; editingRecurId=id||null;
+  const r=id?state.recurring.find(x=>x.id===id):null;
+  document.getElementById("newTitle").textContent=id?"Editar recurrente":"Nueva recurrente";
+  document.getElementById("newSub").textContent="Se genera sola en \"Por hacer\"";
+  document.getElementById("statusField").style.display="none";
+  document.getElementById("recurField").style.display="block";
+  document.getElementById("recurSwitch").style.display="none";       // siempre activa
+  document.getElementById("f-recur").checked=true;
+  document.getElementById("recurBox").classList.remove("off");
+  document.getElementById("f-id").value="";
+  fillProviderSelect(r?r.provider:"");
+  if(r){
+    document.getElementById("f-title").value=r.title;
+    document.getElementById("f-assignee").value=r.assignee;
+    document.getElementById("f-category").value=r.category||"";
+    document.getElementById("f-note").value="";
+    if(r.freq==="weekly"){ setRecModeById("weekly"); curDays=[...(r.days||[])]; document.querySelectorAll("#dayChips .chip").forEach(c=>c.classList.toggle("on",curDays.includes(+c.dataset.day))); }
+    else if(r.freq==="monthly"){ setRecModeById("monthly"); document.getElementById("f-dom").value=r.dayOfMonth||1; }
+    else { setRecModeById("interval"); document.getElementById("f-unit").value=r.freq; document.getElementById("f-interval").value=r.interval||1; document.getElementById("f-next").value=r.nextDue||todayStr(); }
+  } else {
+    resetRecurForm(true);
+    document.getElementById("f-title").value="";
+    document.getElementById("f-assignee").value="ricardo";
+    document.getElementById("f-category").value="";
+    document.getElementById("f-note").value="";
+  }
+  showOv("ovNew"); setTimeout(()=>document.getElementById("f-title").focus(),60);
 }
-function setFreq(btn){
-  curFreq=btn.dataset.freq;
-  document.querySelectorAll("#freqChips .chip").forEach(c=>c.classList.remove("on"));
-  btn.classList.add("on");
-  document.getElementById("weeklyOpts").style.display = curFreq==="weekly"?"block":"none";
-  document.getElementById("monthlyOpts").style.display = curFreq==="monthly"?"block":"none";
+function resetRecurForm(forceInterval){
+  curDays=[]; setRecModeById("interval");
+  document.getElementById("f-recur").checked=false;
+  document.getElementById("recurBox").classList.toggle("off", !forceInterval);
+  document.getElementById("f-interval").value=3;
+  document.getElementById("f-unit").value="weeks";
+  document.getElementById("f-next").value=todayStr();
+  document.querySelectorAll("#dayChips .chip").forEach(c=>c.classList.remove("on"));
 }
-function toggleDay(btn){
-  const d=+btn.dataset.day; btn.classList.toggle("on");
-  if(curDays.includes(d)) curDays=curDays.filter(x=>x!==d); else curDays.push(d);
+function toggleRecur(){ document.getElementById("recurBox").classList.toggle("off", !document.getElementById("f-recur").checked); }
+function setRecMode(btn){ setRecModeById(btn.dataset.mode); }
+function setRecModeById(mode){
+  curRecMode=mode;
+  document.querySelectorAll("#recModeChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.mode===mode));
+  document.getElementById("intervalOpts").style.display = mode==="interval"?"block":"none";
+  document.getElementById("weeklyOpts").style.display   = mode==="weekly"?"block":"none";
+  document.getElementById("monthlyOpts").style.display  = mode==="monthly"?"block":"none";
+}
+function toggleDay(btn){ const d=+btn.dataset.day; btn.classList.toggle("on"); curDays.includes(d)?curDays=curDays.filter(x=>x!==d):curDays.push(d); }
+
+function readRecurRule(){
+  const rule={title:document.getElementById("f-title").value.trim(), assignee:document.getElementById("f-assignee").value, category:document.getElementById("f-category").value.trim(), provider:document.getElementById("f-provider").value, lastGenerated:""};
+  if(curRecMode==="interval"){ rule.freq=document.getElementById("f-unit").value; rule.interval=Math.max(1,parseInt(document.getElementById("f-interval").value)||1); rule.nextDue=document.getElementById("f-next").value||todayStr(); }
+  else if(curRecMode==="weekly"){ if(!curDays.length){ alert("Elige al menos un día."); return null; } rule.freq="weekly"; rule.days=[...curDays]; }
+  else { rule.freq="monthly"; rule.dayOfMonth=+document.getElementById("f-dom").value; }
+  return rule;
 }
 function saveTask(){
   const title=document.getElementById("f-title").value.trim();
   if(!title){ document.getElementById("f-title").focus(); return; }
-  const assignee=document.getElementById("f-assignee").value;
-  const status=document.getElementById("f-status").value;
+  const provider=document.getElementById("f-provider").value;
   const category=document.getElementById("f-category").value.trim();
-  const note=document.getElementById("f-note").value.trim();
-  const id=document.getElementById("f-id").value;
-  const isRecur=document.getElementById("f-recur").checked && !id;
 
-  if(isRecur){
-    const rule={id:uid(),title,assignee,category,freq:curFreq,lastGenerated:""};
-    if(curFreq==="weekly"){ if(!curDays.length){ alert("Elige al menos un día."); return; } rule.days=[...curDays]; }
-    if(curFreq==="monthly"){ rule.dayOfMonth=+document.getElementById("f-dom").value; }
-    state.recurring.push(rule);
+  // modo recurrente (editar o nueva recurrencia)
+  if(modalMode==="recur"){
+    const rule=readRecurRule(); if(!rule) return;
+    if(editingRecurId){ const old=state.recurring.find(r=>r.id===editingRecurId); rule.id=editingRecurId; rule.lastGenerated=old.lastGenerated||""; Object.assign(old,rule); }
+    else { rule.id=uid(); state.recurring.push(rule); }
     runRecurring(); persist(); render(); closeOv("ovNew"); return;
   }
 
-  if(id){
-    const t=state.tasks.find(x=>x.id===id);
-    Object.assign(t,{title,assignee,status,category,note});
-  } else {
-    state.tasks.unshift({id:uid(),title,assignee,category,note,status,createdAt:Date.now(),date:todayStr()});
+  const assignee=document.getElementById("f-assignee").value;
+  const status=document.getElementById("f-status").value;
+  const note=document.getElementById("f-note").value.trim();
+  const id=document.getElementById("f-id").value;
+
+  // tarea nueva marcada como recurrente -> crea regla
+  if(!id && document.getElementById("f-recur").checked){
+    const rule=readRecurRule(); if(!rule) return; rule.id=uid(); state.recurring.push(rule);
+    runRecurring(); persist(); render(); closeOv("ovNew"); return;
   }
+  if(id){ Object.assign(state.tasks.find(x=>x.id===id),{title,assignee,status,category,note,provider}); }
+  else { state.tasks.unshift({id:uid(),title,assignee,category,note,provider,status,createdAt:Date.now(),date:todayStr()}); }
   persist(); render(); closeOv("ovNew");
 }
-function delTask(id){
-  if(!confirm("¿Borrar esta tarea?")) return;
-  state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render();
-}
+function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
 
-/* ============================================================
-   TAREAS COMUNES
-   ============================================================ */
+/* ============================================================ TAREAS COMUNES ============================================================ */
 function openCommon(){ document.getElementById("commonSearch").value=""; renderCommon(); showOv("ovCommon"); }
 function renderCommon(){
   const q=document.getElementById("commonSearch").value.toLowerCase().trim();
   const existing=new Set(state.tasks.filter(t=>t.status!=="completada").map(t=>t.title.toLowerCase()));
   let html="";
   COMMON.forEach(g=>{
-    const items=g.items.filter(it=>!q || it.toLowerCase().includes(q) || g.cat.toLowerCase().includes(q));
+    const items=g.items.filter(it=>!q||it.toLowerCase().includes(q)||g.cat.toLowerCase().includes(q));
     if(!items.length) return;
-    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(g.who)}</span></h3>`;
+    const who=assigneeOf(mapA(g.a)).name;
+    html+=`<div class="cat-group"><h3>${esc(g.cat)} <span class="who">${esc(who)}</span></h3>`;
     items.forEach(it=>{
       const added=existing.has(it.toLowerCase());
-      html+=`<button class="common-item ${added?"added":""}" onclick="addCommon('${esc(it).replace(/'/g,"\\'")}','${g.a}','${esc(g.cat).replace(/'/g,"\\'")}',this)">
-        <span>${esc(it)}</span><span class="add">${added?"✓ ya está":"＋ agregar"}</span></button>`;
+      html+=`<button class="common-item ${added?"added":""}" onclick="addCommon('${esc(it).replace(/'/g,"\\'")}','${mapA(g.a)}','${esc(g.cat).replace(/'/g,"\\'")}',this)"><span>${esc(it)}</span><span class="add">${added?"✓ ya está":"＋ agregar"}</span></button>`;
     });
     html+=`</div>`;
   });
-  document.getElementById("commonList").innerHTML = html || '<div class="recur-empty">Sin resultados.</div>';
+  document.getElementById("commonList").innerHTML = html||'<div class="empty-note">Sin resultados.</div>';
 }
 function addCommon(title,assignee,category,btn){
-  state.tasks.unshift({id:uid(),title,assignee,category,note:"",status:"porhacer",createdAt:Date.now(),date:todayStr()});
-  persist(); render();
-  btn.classList.add("added"); btn.querySelector(".add").textContent="✓ agregada";
+  state.tasks.unshift({id:uid(),title,assignee,category,note:"",provider:"",status:"porhacer",createdAt:Date.now(),date:todayStr()});
+  persist(); render(); btn.classList.add("added"); btn.querySelector(".add").textContent="✓ agregada";
 }
 
-/* ============================================================
-   RECURRENTES (lista)
-   ============================================================ */
+/* ============================================================ RECURRENTES (lista) ============================================================ */
 function openRecur(){ renderRecurList(); showOv("ovRecur"); }
 function renderRecurList(){
   const el=document.getElementById("recurList");
-  if(!state.recurring.length){ el.innerHTML='<div class="recur-empty">Aún no hay tareas recurrentes.</div>'; return; }
-  el.innerHTML = state.recurring.map(r=>{
-    let d="";
-    if(r.freq==="daily") d="Todos los días";
-    else if(r.freq==="weekly") d="Cada semana: "+(r.days||[]).map(x=>DAYS.find(y=>y.i===x).t).join(", ");
-    else d="Cada mes el día "+r.dayOfMonth;
-    const a=assigneeOf(r.assignee);
-    return `<div class="recur-item">
-      <div class="info"><div class="rt">${esc(r.title)}</div>
-        <div class="rd">${d} · <b>${esc(a.name)}</b></div></div>
-      <button class="icon-btn del" style="width:28px;height:28px" title="Eliminar" onclick="delRecur('${r.id}')">✕</button>
-    </div>`;
+  if(!state.recurring.length){ el.innerHTML='<div class="empty-note">Aún no hay tareas recurrentes.</div>'; return; }
+  el.innerHTML=state.recurring.map(r=>{
+    const a=assigneeOf(r.assignee), p=r.provider?providerOf(r.provider):null;
+    return `<div class="recur-item"><div class="info"><div class="rt">${esc(r.title)}</div><div class="rd">${recurDesc(r)} · <b>${esc(a.name)}</b>${p?" · 🟢 "+esc(p.name):""}</div></div>
+      <button class="icon-btn" style="width:28px;height:28px" title="Editar" onclick="closeOv('ovRecur');openRecurForm('${r.id}')">✎</button>
+      <button class="icon-btn del" style="width:28px;height:28px" title="Eliminar" onclick="delRecur('${r.id}')">✕</button></div>`;
   }).join("");
 }
-function delRecur(id){
-  if(!confirm("¿Eliminar esta recurrencia? (las tareas ya creadas se quedan)")) return;
-  state.recurring=state.recurring.filter(r=>r.id!==id); persist(); renderRecurList();
+function delRecur(id){ if(!confirm("¿Eliminar esta recurrencia? (las tareas ya creadas se quedan)"))return; state.recurring=state.recurring.filter(r=>r.id!==id); persist(); renderRecurList(); }
+
+/* ============================================================ PROVEEDORES ============================================================ */
+function openProviders(){ resetProvForm(); renderProviders(); showOv("ovProv"); }
+function renderProviders(){
+  const el=document.getElementById("provList");
+  if(!state.providers.length){ el.innerHTML='<div class="empty-note">Aún no hay proveedores. Agrega el primero arriba ↑</div>'; return; }
+  el.innerHTML=state.providers.map(p=>`<div class="prov-item"><div class="info"><div class="rt">${esc(p.name)}</div><div class="rd">${p.cat?esc(p.cat)+" · ":""}${esc(p.phone||"sin número")}</div></div>
+    ${p.phone?`<a class="wa-btn" href="${waLink(p.phone)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
+    <button class="icon-btn" style="width:28px;height:28px" title="Editar" onclick="editProvider('${p.id}')">✎</button>
+    <button class="icon-btn del" style="width:28px;height:28px" title="Eliminar" onclick="delProvider('${p.id}')">✕</button></div>`).join("");
+}
+function resetProvForm(){
+  document.getElementById("p-id").value=""; document.getElementById("p-name").value=""; document.getElementById("p-phone").value=""; document.getElementById("p-cat").value="";
+  document.getElementById("p-save").textContent="＋ Guardar proveedor"; document.getElementById("p-cancel").style.display="none";
+}
+function editProvider(id){
+  const p=providerOf(id); if(!p) return;
+  document.getElementById("p-id").value=p.id; document.getElementById("p-name").value=p.name; document.getElementById("p-phone").value=p.phone||""; document.getElementById("p-cat").value=p.cat||"";
+  document.getElementById("p-save").textContent="Guardar cambios"; document.getElementById("p-cancel").style.display="inline-flex";
+  document.getElementById("p-name").focus();
+}
+function saveProvider(){
+  const name=document.getElementById("p-name").value.trim();
+  if(!name){ document.getElementById("p-name").focus(); return; }
+  const phone=document.getElementById("p-phone").value.trim(), cat=document.getElementById("p-cat").value.trim(), id=document.getElementById("p-id").value;
+  if(id){ Object.assign(providerOf(id),{name,phone,cat}); }
+  else { state.providers.push({id:uid(),name,phone,cat}); }
+  persist(); resetProvForm(); renderProviders();
+}
+function delProvider(id){
+  if(!confirm("¿Eliminar este proveedor? Se quitará la etiqueta de las tareas que lo usen."))return;
+  state.providers=state.providers.filter(p=>p.id!==id);
+  state.tasks.forEach(t=>{ if(t.provider===id) t.provider=""; });
+  state.recurring.forEach(r=>{ if(r.provider===id) r.provider=""; });
+  persist(); renderProviders(); render();
 }
 
-/* ============================================================
-   EXPORTAR / IMPORTAR
-   ============================================================ */
+/* ============================================================ EXPORTAR / IMPORTAR ============================================================ */
 function exportJSON(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob), a=document.createElement("a");
-  a.href=url; a.download="casa-lopez-acosta-"+todayStr()+".json"; a.click();
-  URL.revokeObjectURL(url);
+  const url=URL.createObjectURL(blob), a=document.createElement("a"); a.href=url; a.download="casa-lopez-acosta-"+todayStr()+".json"; a.click(); URL.revokeObjectURL(url);
 }
 function importJSON(ev){
-  const f=ev.target.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{ try{
-    const d=JSON.parse(rd.result);
-    if(!d.tasks){ alert("Archivo no válido."); return; }
-    if(!confirm("Esto reemplaza el tablero actual. ¿Continuar?")) return;
-    state={tasks:d.tasks||[],recurring:d.recurring||[]}; persist(); render();
-  }catch(e){ alert("No se pudo leer el archivo."); } };
-  rd.readAsText(f); ev.target.value="";
+  const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.tasks){ alert("Archivo no válido."); return; } if(!confirm("Esto reemplaza el tablero actual. ¿Continuar?"))return;
+    state={tasks:d.tasks||[],recurring:d.recurring||[],providers:d.providers||[]}; persist(); render();
+  }catch(e){ alert("No se pudo leer el archivo."); } }; rd.readAsText(f); ev.target.value="";
 }
 
-/* ---------- Overlays ---------- */
+/* overlays */
 function showOv(id){ document.getElementById(id).classList.add("show"); }
 function closeOv(id){ document.getElementById(id).classList.remove("show"); }
 document.addEventListener("click",e=>{ if(e.target.classList.contains("overlay")) e.target.classList.remove("show"); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.show").forEach(o=>o.classList.remove("show")); });
 
-/* ============================================================
-   INIT · candado EYE/181218 · © RLR
-   ============================================================ */
+/* ============================================================ INIT · candado EYE/181218 · © RLR ============================================================ */
 const _RLR_LOCK="EYE/181218";
 load(); fillSelectors(); runRecurring(); render(); initFirebase();
 console.log("%c🏡 Casa López Acosta","color:#56EF9F;font-weight:800;font-size:14px");
