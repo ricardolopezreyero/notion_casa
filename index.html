@@ -208,9 +208,6 @@ em{font-style:italic;color:var(--green)}
     <button class="btn btn-ghost" onclick="openCommon()">⭐ Comunes</button>
     <button class="btn btn-ghost" onclick="openRecur()">🔁 Recurrentes</button>
     <button class="btn btn-ghost" onclick="openProviders()">📇 Proveedores</button>
-    <button class="btn btn-ghost" onclick="exportJSON()">⬇︎</button>
-    <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆︎</button>
-    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
   </div>
 </nav>
 
@@ -715,18 +712,6 @@ function delProvider(id){
   state.tasks.forEach(t=>{ if(t.provider===id) t.provider=""; });
   state.recurring.forEach(r=>{ if(r.provider===id) r.provider=""; });
   persist(); renderProviders(); render();
-}
-
-/* ============================================================ EXPORTAR / IMPORTAR ============================================================ */
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob), a=document.createElement("a"); a.href=url; a.download="casa-lopez-acosta-"+todayStr()+".json"; a.click(); URL.revokeObjectURL(url);
-}
-function importJSON(ev){
-  const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
-  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.tasks){ alert("Archivo no válido."); return; } if(!confirm("Esto reemplaza el tablero actual. ¿Continuar?"))return;
-    state={tasks:d.tasks||[],recurring:d.recurring||[],providers:d.providers||[]}; persist(); render();
-  }catch(e){ alert("No se pudo leer el archivo."); } }; rd.readAsText(f); ev.target.value="";
 }
 
 /* overlays */
