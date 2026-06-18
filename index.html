@@ -277,7 +277,7 @@ em{font-style:italic;color:var(--green)}
       </div>
       <div class="row2">
         <div class="field"><label>Categoría (opcional)</label><select id="f-category"></select></div>
-        <div class="field"><label>Proveedor (opcional)</label><select id="f-provider" onchange="renderProvActions()"></select><div id="provActions" class="prov-actions"></div></div>
+        <div class="field"><label>Proveedor (opcional)</label><select id="f-provider" onchange="onProviderChange()"></select><div id="provActions" class="prov-actions"></div></div>
       </div>
       <div class="row2">
         <div class="field"><label>Costo estimado (opcional)</label><div class="cost-wrap"><span class="cost-sign">$</span><input type="number" id="f-cost" min="0" step="any" placeholder="0" inputmode="decimal"></div></div>
@@ -463,6 +463,7 @@ let state = {tasks:[], recurring:[], providers:[], usage:{}, commons:[]};
 let db = null, suppress = false, lastWrite = 0;
 let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "", curPrio = "baja";
 let completedShown = 10, justCreatedId = null, commonEdit = false;
+let prevProviderVal = "", provReturnToTask = false;
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
@@ -644,9 +645,15 @@ function setFilter(v){
 }
 function fillProviderSelect(sel){
   const provs=[...state.providers].sort((a,b)=>prefOf(a).localeCompare(prefOf(b)) || a.name.localeCompare(b.name));
-  document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+provs.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PREF[prefOf(p)]}</option>`).join("");
+  document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+provs.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PREF[prefOf(p)]}</option>`).join("")+`<option value="__new__">＋ Agregar proveedor nuevo…</option>`;
   document.getElementById("f-provider").value = sel||"";
+  prevProviderVal = sel||"";
   renderProvActions();
+}
+function onProviderChange(){
+  const sel=document.getElementById("f-provider");
+  if(sel.value==="__new__"){ sel.value=prevProviderVal||""; openProvidersForTask(); return; }
+  prevProviderVal=sel.value; renderProvActions();
 }
 function renderProvActions(){
   const id=document.getElementById("f-provider").value, p=id?providerOf(id):null, el=document.getElementById("provActions");
@@ -860,7 +867,8 @@ function renderRecurList(){
 function delRecur(id){ if(!confirm("¿Eliminar esta recurrencia? (las tareas ya creadas se quedan)"))return; state.recurring=state.recurring.filter(r=>r.id!==id); persist(); renderRecurList(); }
 
 /* ============================================================ PROVEEDORES ============================================================ */
-function openProviders(){ resetProvForm(); renderProviders(); showOv("ovProv"); }
+function openProviders(){ provReturnToTask=false; resetProvForm(); renderProviders(); showOv("ovProv"); }
+function openProvidersForTask(){ resetProvForm(); renderProviders(); provReturnToTask=true; showOv("ovProv"); setTimeout(()=>document.getElementById("p-name").focus(),80); }
 function renderProviders(){
   const el=document.getElementById("provList");
   if(!state.providers.length){ el.innerHTML='<div class="empty-note">Aún no hay proveedores. Agrega el primero arriba ↑</div>'; return; }
@@ -884,9 +892,11 @@ function saveProvider(){
   const name=document.getElementById("p-name").value.trim();
   if(!name){ document.getElementById("p-name").focus(); return; }
   const phone=document.getElementById("p-phone").value.trim(), cat=document.getElementById("p-cat").value.trim(), pref=document.getElementById("p-pref").value, id=document.getElementById("p-id").value;
+  let savedId=id;
   if(id){ Object.assign(providerOf(id),{name,phone,cat,pref}); }
-  else { state.providers.push({id:uid(),name,phone,cat,pref}); }
+  else { savedId=uid(); state.providers.push({id:savedId,name,phone,cat,pref}); }
   persist(); resetProvForm(); renderProviders();
+  if(provReturnToTask){ provReturnToTask=false; closeOv("ovProv"); fillProviderSelect(savedId); }   // regresa a la tarea con el nuevo proveedor seleccionado
 }
 function delProvider(id){
   if(!confirm("¿Eliminar este proveedor? Se quitará la etiqueta de las tareas que lo usen."))return;
