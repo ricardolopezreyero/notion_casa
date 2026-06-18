@@ -163,6 +163,8 @@ em{font-style:italic;color:var(--green)}
 .btn-lg{padding:12px 22px;font-size:14px;border-radius:9px}
 .btn-cancel{background:#fff;color:var(--muted);border:.5px solid var(--border)}
 .btn-cancel:hover{background:var(--blue-soft);color:var(--navy);transform:none}
+.btn-del{background:#fff;color:#D62828;border:.5px solid #F3C0C0}
+.btn-del:hover{background:#FFECEC;color:#C81E1E;transform:none}
 .help{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
 
 .recur-box{border:.5px solid var(--border);border-radius:11px;padding:14px;background:var(--blue-soft);margin-top:4px}
@@ -222,6 +224,8 @@ em{font-style:italic;color:var(--green)}
 @keyframes fIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes emerge{0%{opacity:0;transform:scale(.55) translateY(26px)}55%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes removeCard{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.82) translateY(-10px)}}
+.card-removing{animation:removeCard .32s var(--ease) forwards!important;pointer-events:none}
 @keyframes ovIn{from{opacity:0}to{opacity:1}}
 @keyframes ovOut{from{opacity:1}to{opacity:0}}
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -325,9 +329,12 @@ em{font-style:italic;color:var(--green)}
         </div>
       </div>
     </div>
-    <div class="modal-foot" style="padding:0 24px 22px">
-      <button class="btn btn-lg btn-cancel" onclick="closeOv('ovNew')">Cancelar</button>
-      <button class="btn btn-lg btn-green" onclick="saveTask()">Guardar</button>
+    <div class="modal-foot" style="padding:0 24px 22px;justify-content:space-between">
+      <button class="btn btn-lg btn-del" id="deleteTaskBtn" onclick="deleteFromModal()" style="display:none">🗑️ Borrar</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-lg btn-cancel" onclick="closeOv('ovNew')">Cancelar</button>
+        <button class="btn btn-lg btn-green" onclick="saveTask()">Guardar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -670,6 +677,7 @@ function openNew(id){
   document.getElementById("statusField").style.display="block";
   document.getElementById("recurField").style.display=isEdit?"none":"block";
   document.getElementById("recurSwitch").style.display="flex";
+  document.getElementById("deleteTaskBtn").style.display=isEdit?"inline-flex":"none";
   resetRecurForm(false);
   fillProviderSelect(isEdit ? (state.tasks.find(x=>x.id===id)||{}).provider : "");
   if(isEdit){
@@ -700,6 +708,7 @@ function openRecurForm(id){
   document.getElementById("statusField").style.display="none";
   document.getElementById("recurField").style.display="block";
   document.getElementById("recurSwitch").style.display="none";       // siempre activa
+  document.getElementById("deleteTaskBtn").style.display="none";
   document.getElementById("f-recur").checked=true;
   document.getElementById("recurBox").classList.remove("off");
   document.getElementById("f-id").value="";
@@ -784,7 +793,21 @@ function saveTask(){
   else { const nid=uid(); justCreatedId=nid; state.tasks.unshift({id:nid,title,assignee,category,note,provider,cost,priority:curPrio,status,completedAt:status==="completada"?Date.now():null,createdAt:Date.now(),date:todayStr()}); }
   persist(); render(); closeOv("ovNew");
 }
-function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
+function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; removeTaskAnimated(id); }
+function deleteFromModal(){
+  const id=document.getElementById("f-id").value; if(!id) return;
+  closeOv("ovNew");
+  removeTaskAnimated(id);
+}
+function removeTaskAnimated(id){
+  const card=document.querySelector('.card[data-id="'+id+'"]');
+  if(card){
+    card.style.animation="none"; card.style.pointerEvents="none";
+    card.classList.add("card-removing");
+    card.addEventListener("animationend",function h(){ card.removeEventListener("animationend",h); state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); });
+    setTimeout(()=>{ if(state.tasks.some(t=>t.id===id)){ state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); } }, 420); // respaldo
+  } else { state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
+}
 
 /* ============================================================ TAREAS COMUNES ============================================================ */
 function openCommon(){ document.getElementById("commonSearch").value=""; commonEdit=false; document.getElementById("commonEditBtn").textContent="✏️ Editar"; document.getElementById("commonAddForm").style.display="none"; renderCommon(); showOv("ovCommon"); }
