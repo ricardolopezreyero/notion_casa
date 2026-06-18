@@ -770,7 +770,10 @@ function setFilter(v){
 }
 function fillProviderSelect(sel){
   const provs=[...state.providers].sort((a,b)=>prefOf(a).localeCompare(prefOf(b)) || a.name.localeCompare(b.name));
-  document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+provs.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PREF[prefOf(p)]}</option>`).join("")+`<option value="__new__">＋ Agregar proveedor nuevo…</option>`;
+  document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+provs.map(p=>{
+    const label=(p.cat?esc(p.cat)+" · ":"")+esc(p.name)+" · "+PREF[prefOf(p)];   // servicio · nombre · opción
+    return `<option value="${p.id}">${label}</option>`;
+  }).join("")+`<option value="__new__">＋ Agregar proveedor nuevo…</option>`;
   document.getElementById("f-provider").value = sel||"";
   prevProviderVal = sel||"";
   renderProvActions();
