@@ -224,8 +224,6 @@ em{font-style:italic;color:var(--green)}
 @keyframes fIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes emerge{0%{opacity:0;transform:scale(.55) translateY(26px)}55%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes removeCard{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.82) translateY(-10px)}}
-.card-removing{animation:removeCard .32s var(--ease) forwards!important;pointer-events:none}
 @keyframes ovIn{from{opacity:0}to{opacity:1}}
 @keyframes ovOut{from{opacity:1}to{opacity:0}}
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -793,7 +791,7 @@ function saveTask(){
   else { const nid=uid(); justCreatedId=nid; state.tasks.unshift({id:nid,title,assignee,category,note,provider,cost,priority:curPrio,status,completedAt:status==="completada"?Date.now():null,createdAt:Date.now(),date:todayStr()}); }
   persist(); render(); closeOv("ovNew");
 }
-function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; removeTaskAnimated(id); }
+function delTask(id){ removeTaskAnimated(id); }
 function deleteFromModal(){
   const id=document.getElementById("f-id").value; if(!id) return;
   closeOv("ovNew");
@@ -801,12 +799,32 @@ function deleteFromModal(){
 }
 function removeTaskAnimated(id){
   const card=document.querySelector('.card[data-id="'+id+'"]');
-  if(card){
-    card.style.animation="none"; card.style.pointerEvents="none";
-    card.classList.add("card-removing");
-    card.addEventListener("animationend",function h(){ card.removeEventListener("animationend",h); state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); });
-    setTimeout(()=>{ if(state.tasks.some(t=>t.id===id)){ state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); } }, 420); // respaldo
-  } else { state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
+  if(!card){ state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); return; }
+  // 1) posiciones previas de las demás tarjetas
+  const others=[...document.querySelectorAll(".card")].filter(c=>c!==card);
+  const prev=new Map(); others.forEach(c=>prev.set(c,c.getBoundingClientRect()));
+  // 2) sacar la tarjeta del flujo (absolute) -> la columna colapsa su espacio ahora mismo
+  const r=card.getBoundingClientRect(), parent=card.parentElement, pr=parent.getBoundingClientRect();
+  parent.style.position="relative";
+  card.style.cssText+=";position:absolute;margin:0;z-index:5;animation:none;pointer-events:none;"+
+    "top:"+(r.top-pr.top)+"px;left:"+(r.left-pr.left)+"px;width:"+r.width+"px;";
+  // 3) FLIP: las de abajo suben a su nuevo lugar al mismo tiempo
+  others.forEach(c=>{
+    const old=prev.get(c), now=c.getBoundingClientRect();
+    const dx=old.left-now.left, dy=old.top-now.top;
+    if(!dx && !dy) return;
+    c.style.animation="none"; c.style.transition="none"; c.style.transform=`translate(${dx}px,${dy}px)`;
+    requestAnimationFrame(()=>{ c.style.transition="transform .42s var(--ease)"; c.style.transform=""; });
+  });
+  // 4) la tarjeta se comprime y desaparece (inverso a la entrada)
+  requestAnimationFrame(()=>{
+    card.style.transition="transform .34s var(--ease),opacity .3s var(--ease)";
+    card.style.transformOrigin="center top";
+    card.style.transform="scale(.55) translateY(12px)";
+    card.style.opacity="0";
+  });
+  // 5) al terminar: borrar del estado y re-render limpio
+  setTimeout(()=>{ state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }, 380);
 }
 
 /* ============================================================ TAREAS COMUNES ============================================================ */
