@@ -265,7 +265,7 @@ em{font-style:italic;color:var(--green)}
       <input type="hidden" id="f-id">
       <div class="field">
         <label>¿Qué hay que hacer?</label>
-        <input type="text" id="f-title" placeholder="Ej. arreglar la llave de la puerta" autocomplete="off">
+        <input type="text" id="f-title" placeholder="Ej. arreglar la llave de la puerta" autocomplete="off" onkeydown="formKey(event)">
       </div>
       <div class="row2">
         <div class="field"><label>Responsable</label><select id="f-assignee"></select></div>
@@ -283,10 +283,10 @@ em{font-style:italic;color:var(--green)}
         <div class="field"><label>Proveedor (opcional)</label><select id="f-provider" onchange="onProviderChange()"></select><div id="provActions" class="prov-actions"></div></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Costo estimado (opcional)</label><div class="cost-wrap"><span class="cost-sign">$</span><input type="number" id="f-cost" min="0" step="any" placeholder="0" inputmode="decimal"></div></div>
+        <div class="field"><label>Costo estimado (opcional)</label><div class="cost-wrap"><span class="cost-sign">$</span><input type="number" id="f-cost" min="0" step="any" placeholder="0" inputmode="decimal" onkeydown="formKey(event)"></div></div>
         <div class="field"></div>
       </div>
-      <div class="field"><label>Nota (opcional)</label><textarea id="f-note" placeholder="Detalles, lugar, lo que se necesita..."></textarea></div>
+      <div class="field"><label>Nota (opcional)</label><textarea id="f-note" placeholder="Detalles, lugar, lo que se necesita... (Ctrl/⌘+Enter guarda)" onkeydown="formKey(event)"></textarea></div>
 
       <div class="field" id="recurField">
         <label>¿Es recurrente?</label>
@@ -740,6 +740,11 @@ function resetRecurForm(forceInterval){
   document.getElementById("f-unit").value="weeks";
   document.getElementById("f-next").value=todayStr();
   document.querySelectorAll("#dayChips .chip").forEach(c=>c.classList.remove("on"));
+}
+function formKey(e){
+  if(e.key!=="Enter") return;
+  if(e.target.tagName==="TEXTAREA"){ if(e.metaKey||e.ctrlKey){ e.preventDefault(); saveTask(); } return; }
+  e.preventDefault(); saveTask();
 }
 function toggleRecur(){ document.getElementById("recurBox").classList.toggle("off", !document.getElementById("f-recur").checked); }
 function setRecMode(btn){ setRecModeById(btn.dataset.mode); }
