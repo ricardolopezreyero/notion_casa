@@ -70,6 +70,14 @@ em{font-style:italic;color:var(--green)}
 .nav-select:hover{background:rgba(255,255,255,.12);color:#fff}
 .nav-select.active{background:var(--green);color:var(--navy);border-color:transparent}
 .nav-select option{color:#16203a;background:#fff}
+.btn-qr{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.06);color:#cdd9f0;border:.5px solid rgba(255,255,255,.14);transition:background .2s,color .2s,transform .2s var(--ease)}
+.btn-qr:hover{background:var(--green);color:var(--navy);border-color:transparent;transform:translateY(-1px)}
+.share-qr{width:228px;height:228px;border-radius:16px;border:.5px solid var(--border);background:#fff;padding:8px;margin:2px auto 0;display:block;object-fit:contain}
+.share-row{display:flex;gap:8px;align-items:stretch}
+.share-row input{flex:1;min-width:0;font-family:inherit;font-size:13px;font-weight:600;color:#16203a;border:.5px solid var(--border);border-radius:9px;padding:11px 13px;background:var(--blue-soft)}
+.share-row .btn{flex:none}
+.share-native{width:100%;justify-content:center;margin-top:12px;background:var(--navy);color:#fff}
+.share-native:hover{background:var(--navy-mid);transform:translateY(-1px)}
 
 /* ---------- BOARD ---------- */
 .board-wrap{padding:22px 28px 40px}
@@ -295,6 +303,12 @@ em{font-style:italic;color:var(--green)}
     <button class="btn btn-ghost" onclick="openCommon()">⭐ <span class="lbl">Comunes</span></button>
     <button class="btn btn-ghost" onclick="openRecur()">🔁 <span class="lbl">Recurrentes</span></button>
     <button class="btn btn-ghost" onclick="openProviders()">📇 <span class="lbl">Proveedores</span></button>
+    <button class="btn-qr" onclick="openShare()" title="Compartir tablero" aria-label="Compartir">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="14" width="3" height="3" rx=".6"/><rect x="18.4" y="14" width="2.6" height="2.6" rx=".6"/><rect x="14" y="18.4" width="2.6" height="2.6" rx=".6"/><rect x="18.4" y="18.4" width="2.6" height="2.6" rx=".6"/>
+      </svg>
+    </button>
   </div>
 </nav>
 
@@ -436,6 +450,22 @@ em{font-style:italic;color:var(--green)}
         <p class="help" id="p-hint">El número de México (10 dígitos) arma el link de WhatsApp automáticamente.</p>
       </div>
       <div id="provList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: COMPARTE ============ -->
+<div class="overlay" id="ovShare">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><div><h2>📲 Comparte</h2><div class="sub">Escanea el QR o copia el link</div></div><button class="x" onclick="closeOv('ovShare')">✕</button></div>
+    <div class="modal-body" style="text-align:center">
+      <img class="share-qr" src="https://assets.cdn.filesafe.space/oJZ21k8uxJN71kkkhwF9/media/6a33773f6dd61c546a18e28c.png" alt="Código QR del tablero">
+      <p class="help" style="margin:6px 0 16px">Escanea con la cámara del celular</p>
+      <div class="share-row">
+        <input id="shareUrl" type="text" readonly value="https://ricardolopezreyero.github.io/notion_casa/" onclick="this.select()">
+        <button class="btn btn-green" id="shareCopyBtn" onclick="copyShare()">Copiar</button>
+      </div>
+      <button class="btn btn-lg share-native" id="shareNativeBtn" onclick="shareNative()" style="display:none">📲 Compartir…</button>
     </div>
   </div>
 </div>
@@ -1033,6 +1063,17 @@ function delProvider(id){
   state.recurring.forEach(r=>{ if(r.provider===id) r.provider=""; });
   persist(); renderProviders(); render();
 }
+
+/* ============================================================ COMPARTIR ============================================================ */
+const SHARE_URL="https://ricardolopezreyero.github.io/notion_casa/";
+function openShare(){ document.getElementById("shareNativeBtn").style.display = navigator.share ? "inline-flex" : "none"; showOv("ovShare"); }
+function legacyCopy(){ const i=document.getElementById("shareUrl"); i.focus(); i.select(); try{document.execCommand("copy");}catch(e){} }
+function copyShare(){
+  const done=()=>{ const b=document.getElementById("shareCopyBtn"); b.textContent="✓ Copiado"; setTimeout(()=>b.textContent="Copiar",1600); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(SHARE_URL).then(done).catch(()=>{ legacyCopy(); done(); }); }
+  else { legacyCopy(); done(); }
+}
+function shareNative(){ if(navigator.share) navigator.share({title:"Tablero Casa López Acosta",text:"Tablero de la casa",url:SHARE_URL}).catch(()=>{}); }
 
 /* overlays */
 function showOv(id){ const o=document.getElementById(id); o.classList.remove("closing"); o.classList.add("show"); }
