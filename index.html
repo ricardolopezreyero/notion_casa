@@ -279,19 +279,21 @@ em{font-style:italic;color:var(--green)}
   .icon-btn.col-move{display:grid;background:var(--navy);color:#fff}
   .pill,.pill-cat,.pill-prov,.pill-cost,.pill-prio{font-size:11px}
 
-  /* MODALES tipo hoja inferior */
-  .overlay{padding:0;align-items:flex-end}
+  /* MODALES tipo hoja inferior: ancho exacto de pantalla + footer fijo */
+  .overlay{padding:0;align-items:flex-end;overflow:hidden}
   .overlay.show{animation:sheetIn .26s var(--ease)}
-  .modal,.modal.wide{max-width:100%;border-radius:20px 20px 0 0;max-height:94vh}
-  .modal-head{padding:18px 18px 13px}
+  .modal,.modal.wide{max-width:100%!important;width:100%;border-radius:20px 20px 0 0;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{flex:none;padding:16px 18px 12px}
   .modal-head h2{font-size:19px}
-  .modal-body{max-height:74vh;padding:18px 18px 22px}
+  .modal-body{flex:1 1 auto;min-height:0;max-height:none;padding:16px 18px 18px}
   .row2{grid-template-columns:1fr;gap:0}
-  .modal-foot{flex-wrap:wrap;padding-left:18px!important;padding-right:18px!important}
-  .modal-foot>div{width:100%;margin-left:0!important}
-  .btn-lg{flex:1;justify-content:center}
-  #deleteTaskBtn{width:100%;justify-content:center;margin-bottom:8px}
-  .field input,.field select,.field textarea{font-size:16px}  /* evita el zoom de iOS al enfocar */
+  /* footer pegado abajo, siempre visible (no se pierde en el scroll) */
+  .modal-foot{flex:none;flex-wrap:wrap;gap:10px;margin:0;background:#fff;border-top:.5px solid var(--border);padding:13px 18px calc(16px + env(safe-area-inset-bottom))!important}
+  .modal-foot>div{width:100%;margin-left:0!important;display:flex;gap:10px}
+  .modal-foot .btn-lg{flex:1;justify-content:center}
+  #deleteTaskBtn{width:100%;justify-content:center}
+  .field input,.field select,.field textarea,.share-row input{font-size:16px}  /* evita el zoom de iOS al enfocar */
+  .share-qr{width:min(78vw,240px);height:min(78vw,240px)}
 }
 @keyframes sheetIn{from{opacity:0}to{opacity:1}}
 </style>
