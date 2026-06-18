@@ -513,7 +513,9 @@ const COMMON = [
 
 /* ============================================================ ESTADO ============================================================ */
 let state = {tasks:[], recurring:[], providers:[], usage:{}, commons:[]};
-let db = null, suppress = false, lastWrite = 0;
+let db = null, suppress = false;
+let remoteAddedIds = null, firstRemote = true;
+const myNonces = new Set();   // ids de mis propias escrituras, para reconocer mi eco vs. cambios de otras pantallas
 let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "", curPrio = "baja";
 let completedShown = 10, justCreatedId = null, commonEdit = false;
 let prevProviderVal = "", provReturnToTask = false;
@@ -542,7 +544,10 @@ function load(){
 }
 function persist(){
   localStorage.setItem("board-"+BOARD_KEY, JSON.stringify(state));
-  if(db && !suppress){ lastWrite=Date.now(); db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
+  if(db && !suppress){
+    const n=uid(); myNonces.add(n); if(myNonces.size>40) myNonces.delete(myNonces.values().next().value);
+    db.ref("boards/"+BOARD_KEY).set({tasks:state.tasks,recurring:state.recurring,providers:state.providers,usage:state.usage,commons:state.commons,_w:n}).catch(()=>{});
+  }
 }
 function initFirebase(){
   if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA")===0){ setSync(false); return; }
@@ -558,10 +563,9 @@ function initFirebase(){
         const v=snap.val()||{};
         const incoming={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{},commons:seedCommons(v.commons)};
         localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(incoming));
-        suppress=true; state=incoming; suppress=false;
-        // Si es el eco de nuestro propio cambio reciente, ya renderizamos local -> no re-render (preserva animaciones)
-        if(Date.now()-lastWrite < 1500) return;
-        render();
+        if(firstRemote){ firstRemote=false; suppress=true; state=incoming; suppress=false; render(); return; }   // carga inicial: sin animar
+        if(v._w && myNonces.has(v._w)){ myNonces.delete(v._w); suppress=true; state=incoming; suppress=false; return; }   // mi propio eco -> ya animé local
+        applyRemote(incoming);   // cambio de OTRA pantalla -> aplicar con animación
       }, ()=>setSync(false));
     });
   }catch(e){ setSync(false); }
@@ -605,6 +609,29 @@ function recurDesc(r){
 }
 
 /* ============================================================ RENDER ============================================================ */
+/* Aplica un cambio que vino de OTRA pantalla, con las mismas animaciones que en local */
+function applyRemote(incoming){
+  // Si el usuario está arrastrando, NO re-renderizar (rompería el arrastre): actualiza datos en silencio.
+  if(dragId){ suppress=true; state=incoming; suppress=false; return; }
+  const board=document.getElementById("board");
+  const newIds=new Set(incoming.tasks.map(t=>t.id));
+  const oldIds=new Set(state.tasks.map(t=>t.id));
+  const removedIds=state.tasks.filter(t=>!newIds.has(t.id)).map(t=>t.id);
+  const addedIds=incoming.tasks.filter(t=>!oldIds.has(t.id)).map(t=>t.id);
+  // Borradas: clon flotante que se comprime y desaparece (sobrevive al re-render); las que quedan suben con FLIP.
+  removedIds.forEach(id=>{
+    const card=board&&board.querySelector('.card[data-id="'+id+'"]'); if(!card) return;
+    const r=card.getBoundingClientRect(), clone=card.cloneNode(true);
+    clone.style.cssText="position:fixed;top:"+r.top+"px;left:"+r.left+"px;width:"+r.width+"px;margin:0;z-index:400;pointer-events:none;animation:none;transition:transform .34s var(--ease),opacity .3s var(--ease);transform-origin:center top";
+    document.body.appendChild(clone);
+    requestAnimationFrame(()=>{ clone.style.transform="scale(.55) translateY(12px)"; clone.style.opacity="0"; });
+    setTimeout(()=>clone.remove(),440);
+  });
+  remoteAddedIds=new Set(addedIds);   // las nuevas emergen
+  suppress=true; state=incoming; suppress=false;
+  render();                           // FLIP desliza lo que cambió de columna/orden
+  remoteAddedIds=null;
+}
 function render(){
   // FLIP: guarda posiciones previas para animar el movimiento natural
   const prev={};
@@ -652,7 +679,7 @@ function cardHTML(t){
   const p=t.provider?providerOf(t.provider):null;
   const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
   const doneCls=t.status==="completada"?" card-done":"";
-  const emergeCls=t.id===justCreatedId?" card-emerge":"";
+  const emergeCls=(t.id===justCreatedId||(remoteAddedIds&&remoteAddedIds.has(t.id)))?" card-emerge":"";
   return `<div class="card${doneCls}${emergeCls}" style="--prio:${pr.d}" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
     <div class="card-actions"><button class="icon-btn col-move" title="Columna anterior" onclick="event.stopPropagation();moveCol('${t.id}',-1)">◀</button><button class="icon-btn col-move" title="Columna siguiente" onclick="event.stopPropagation();moveCol('${t.id}',1)">▶</button><button class="icon-btn" title="Subir (más prioridad)" onclick="event.stopPropagation();moveTask('${t.id}',-1)">▲</button><button class="icon-btn" title="Bajar" onclick="event.stopPropagation();moveTask('${t.id}',1)">▼</button><button class="icon-btn del" title="Borrar" onclick="event.stopPropagation();delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
