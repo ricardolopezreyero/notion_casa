@@ -125,6 +125,7 @@ em{font-style:italic;color:var(--green)}
 .icon-btn{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:transparent;color:#9aa7c4;font-size:12px;line-height:1}
 .icon-btn:hover{background:var(--blue-soft);color:var(--navy)}
 .icon-btn.del:hover{background:#FFECEC;color:#D33}
+.icon-btn.col-move{display:none}   /* sólo en móvil (en escritorio se arrastra) */
 
 /* responsable pills */
 .r-ana{background:rgba(192,57,155,.12);color:#C0399B}
@@ -233,6 +234,52 @@ em{font-style:italic;color:var(--green)}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px}
 .modal-body::-webkit-scrollbar-thumb{background:#cdd9f0}
 @media(max-width:1100px){.board{display:flex;overflow-x:auto;gap:14px;padding-bottom:14px}.col{min-width:262px}}
+
+/* ====================== MÓVIL (iPhone) ====================== */
+@media(max-width:560px){
+  /* NAV compacto */
+  .nav{padding:10px 14px;gap:9px;flex-wrap:wrap}
+  .nav-left{flex:1}
+  .nav-title{font-size:18px;letter-spacing:-.5px}
+  .nav-actions{gap:7px;width:100%;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .nav-actions::-webkit-scrollbar{display:none}
+  .btn{padding:10px 13px;font-size:12.5px;flex:none}
+  .btn-ghost .lbl{display:none}              /* secundarios: sólo emoji */
+  .nav-select{padding:10px 11px;font-size:12.5px;flex:none}
+  .sync-pill{font-size:9px;padding:5px 9px;flex:none}
+
+  /* BOARD: una columna a la vez, con swipe y snap */
+  .board-wrap{padding:14px 12px 44px}
+  .board{gap:12px;scroll-snap-type:x mandatory;scroll-padding:12px}
+  .col{min-width:84vw;scroll-snap-align:center;padding:14px 12px 16px}
+  .col-name{font-size:13px}
+
+  /* TARJETAS: acciones siempre visibles, abajo, con buen tamaño */
+  .card{padding:14px 15px 13px;display:flex;flex-direction:column}
+  .card-title{padding-right:0;font-size:15px}
+  .card-note{font-size:13px}
+  .card-actions{position:static;opacity:1;display:flex;justify-content:flex-end;gap:7px;margin-top:13px;order:5}
+  .card:hover{transform:none;box-shadow:none}
+  .icon-btn{width:34px;height:34px;font-size:14px;border-radius:9px;background:var(--blue-soft);color:var(--navy)}
+  .icon-btn.del{background:#FFECEC;color:#D33}
+  .icon-btn.col-move{display:grid;background:var(--navy);color:#fff}
+  .pill,.pill-cat,.pill-prov,.pill-cost,.pill-prio{font-size:11px}
+
+  /* MODALES tipo hoja inferior */
+  .overlay{padding:0;align-items:flex-end}
+  .overlay.show{animation:sheetIn .26s var(--ease)}
+  .modal,.modal.wide{max-width:100%;border-radius:20px 20px 0 0;max-height:94vh}
+  .modal-head{padding:18px 18px 13px}
+  .modal-head h2{font-size:19px}
+  .modal-body{max-height:74vh;padding:18px 18px 22px}
+  .row2{grid-template-columns:1fr;gap:0}
+  .modal-foot{flex-wrap:wrap;padding-left:18px!important;padding-right:18px!important}
+  .modal-foot>div{width:100%;margin-left:0!important}
+  .btn-lg{flex:1;justify-content:center}
+  #deleteTaskBtn{width:100%;justify-content:center;margin-bottom:8px}
+  .field input,.field select,.field textarea{font-size:16px}  /* evita el zoom de iOS al enfocar */
+}
+@keyframes sheetIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
@@ -244,10 +291,10 @@ em{font-style:italic;color:var(--green)}
   <div class="nav-actions">
     <span id="syncPill" class="sync-pill local"><span class="dot"></span><span id="syncTxt">Local</span></span>
     <select id="filterAssignee" class="nav-select" onchange="setFilter(this.value)" title="Filtrar por responsable"></select>
-    <button class="btn btn-green" onclick="openNew()">＋ Nueva tarea</button>
-    <button class="btn btn-ghost" onclick="openCommon()">⭐ Comunes</button>
-    <button class="btn btn-ghost" onclick="openRecur()">🔁 Recurrentes</button>
-    <button class="btn btn-ghost" onclick="openProviders()">📇 Proveedores</button>
+    <button class="btn btn-green" onclick="openNew()">＋ <span class="lbl">Nueva tarea</span></button>
+    <button class="btn btn-ghost" onclick="openCommon()">⭐ <span class="lbl">Comunes</span></button>
+    <button class="btn btn-ghost" onclick="openRecur()">🔁 <span class="lbl">Recurrentes</span></button>
+    <button class="btn btn-ghost" onclick="openProviders()">📇 <span class="lbl">Proveedores</span></button>
   </div>
 </nav>
 
@@ -607,7 +654,7 @@ function cardHTML(t){
   const doneCls=t.status==="completada"?" card-done":"";
   const emergeCls=t.id===justCreatedId?" card-emerge":"";
   return `<div class="card${doneCls}${emergeCls}" style="--prio:${pr.d}" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
-    <div class="card-actions"><button class="icon-btn" title="Subir (más prioridad)" onclick="event.stopPropagation();moveTask('${t.id}',-1)">▲</button><button class="icon-btn" title="Bajar" onclick="event.stopPropagation();moveTask('${t.id}',1)">▼</button><button class="icon-btn del" title="Borrar" onclick="event.stopPropagation();delTask('${t.id}')">✕</button></div>
+    <div class="card-actions"><button class="icon-btn col-move" title="Columna anterior" onclick="event.stopPropagation();moveCol('${t.id}',-1)">◀</button><button class="icon-btn col-move" title="Columna siguiente" onclick="event.stopPropagation();moveCol('${t.id}',1)">▶</button><button class="icon-btn" title="Subir (más prioridad)" onclick="event.stopPropagation();moveTask('${t.id}',-1)">▲</button><button class="icon-btn" title="Bajar" onclick="event.stopPropagation();moveTask('${t.id}',1)">▼</button><button class="icon-btn del" title="Borrar" onclick="event.stopPropagation();delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
     ${t.note?`<div class="card-note">${esc(t.note)}</div>`:""}
     <div class="card-meta">${prio}<span class="pill ${a.cls}">${esc(a.name)}</span>${cat}${cost}${prov}${recur}${t.date?`<span class="card-date">${fmtDate(t.date)}</span>`:""}</div>
@@ -622,6 +669,13 @@ function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add("drag-
 function onDragLeave(e){ e.currentTarget.classList.remove("drag-over"); }
 function onDrop(e,col){ e.preventDefault(); e.currentTarget.classList.remove("drag-over"); const t=state.tasks.find(x=>x.id===dragId); if(t&&t.status!==col){ t.status=col; t.completedAt=(col==="completada")?Date.now():null; persist(); render(); } dragId=null; }
 function cardClick(e,id){ if(Date.now()-lastDragEnd<250) return; openNew(id); }   // clic en toda la tarjeta abre detalle
+function moveCol(id,dir){
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  const i=COLUMNS.findIndex(c=>c.id===t.status), j=i+dir;
+  if(j<0||j>=COLUMNS.length) return;
+  t.status=COLUMNS[j].id; t.completedAt=(t.status==="completada")?Date.now():null;
+  persist(); render();
+}
 function moveTask(id,dir){
   const i=state.tasks.findIndex(t=>t.id===id); if(i<0) return;
   const st=state.tasks[i].status; let j=-1;
