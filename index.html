@@ -95,6 +95,10 @@ em{font-style:italic;color:var(--green)}
 .col-count{margin-left:auto;font-size:11px;font-weight:700;color:#7a9fd4;background:rgba(255,255,255,.06);border-radius:20px;padding:2px 9px;min-width:24px;text-align:center}
 .col-body{display:flex;flex-direction:column;gap:9px;min-height:30px}
 .col-empty{font-size:11px;color:#3a5a9a;text-align:center;padding:18px 6px;font-weight:500}
+.col-add{width:23px;height:23px;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.07);color:#9fb0d4;font-size:15px;line-height:1;margin-left:8px;flex:none;cursor:pointer;transition:background .15s,color .15s,transform .15s var(--ease)}
+.col-add:hover{background:var(--green);color:var(--navy);transform:translateY(-1px)}
+.empty-add{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:14px;border-radius:11px;border:1px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.02);color:#7a9fd4;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.18s var(--ease)}
+.empty-add:hover{border-color:rgba(86,239,159,.5);background:rgba(86,239,159,.06);color:var(--green);transform:translateY(-1px)}
 
 /* ---------- CARD ---------- */
 .card{
@@ -242,6 +246,8 @@ em{font-style:italic;color:var(--green)}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px}
 .modal-body::-webkit-scrollbar-thumb{background:#cdd9f0}
 @media(max-width:1100px){.board{display:flex;overflow-x:auto;gap:14px;padding-bottom:14px}.col{min-width:262px}}
+/* Escritorio mediano: botones secundarios sólo emoji para que el nav (con el QR) quepa en un renglón */
+@media(min-width:561px) and (max-width:1240px){ .nav-actions{flex-wrap:nowrap} .btn-ghost .lbl{display:none} }
 
 /* ====================== MÓVIL (iPhone) ====================== */
 @media(max-width:560px){
@@ -677,8 +683,8 @@ function render(){
       if(total>cards.length) moreBtn=`<button class="load-more" onclick="loadMoreCompleted()">Cargar más (${total-cards.length} más)</button>`;
     }
     return `<div class="col" data-col="${col.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
-      <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${total}</span></div>
-      <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div>${moreBtn}</div>`;
+      <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${total}</span><button class="col-add" onclick="openNew(null,'${col.id}')" title="Nueva tarea en ${col.name}">＋</button></div>
+      <div class="col-body">${cards.length?cards.map(cardHTML).join(""):`<button class="empty-add" onclick="openNew(null,'${col.id}')">＋ Nueva tarea</button>`}</div>${moreBtn}</div>`;
   }).join("");
 
   // FLIP: desliza cada tarjeta desde donde estaba hasta su nuevo lugar
@@ -777,7 +783,7 @@ function renderProvActions(){
   if(p && p.phone){ el.innerHTML = `<a class="mini-wa" href="${waLink(p.phone)}" target="_blank" rel="noopener">📲 WhatsApp</a><a class="mini-call" href="tel:+${waDigits(p.phone)}">📞 Llamar</a>`; }
   else el.innerHTML = "";
 }
-function openNew(id){
+function openNew(id, presetCol){
   modalMode="task"; editingRecurId=null;
   const isEdit=!!id;
   document.getElementById("f-id").value=id||"";
@@ -801,7 +807,7 @@ function openNew(id){
   } else {
     document.getElementById("f-title").value="";
     document.getElementById("f-assignee").value="ricardo";
-    document.getElementById("f-status").value="reserva";
+    document.getElementById("f-status").value=presetCol||"reserva";
     document.getElementById("f-category").value="";
     document.getElementById("f-cost").value="";
     document.getElementById("f-note").value="";
