@@ -572,18 +572,18 @@ function render(){
 
   // FLIP: desliza cada tarjeta desde donde estaba hasta su nuevo lugar
   document.querySelectorAll(".card").forEach(c=>{
-    const old=prev[c.dataset.id]; if(!old) return;           // tarjeta nueva -> usa fIn
+    const old=prev[c.dataset.id]; if(!old) return;           // tarjeta nueva -> deja su animación de entrada
+    c.style.animation="none";                                // tarjeta existente -> no re-animar entrada (evita parpadeo)
     const now=c.getBoundingClientRect();
     const dx=old.left-now.left, dy=old.top-now.top;
-    if(!dx && !dy) return;
-    c.style.animation="none";
+    if(!dx && !dy) return;                                    // no se movió -> sólo se quitó el parpadeo
     c.style.transition="none";
     c.style.transform=`translate(${dx}px,${dy}px)`;
     requestAnimationFrame(()=>{
       c.style.transition="transform .46s var(--ease)";
       c.style.transform="";
     });
-    c.addEventListener("transitionend",function h(){ c.style.transition=""; c.style.animation=""; c.removeEventListener("transitionend",h); });
+    c.addEventListener("transitionend",function h(){ c.style.transition=""; c.removeEventListener("transitionend",h); });
   });
   justCreatedId=null;
 }
