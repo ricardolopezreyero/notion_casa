@@ -10,7 +10,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🏡 Casa López Acosta · Tablero</title>
-<link rel="icon" href="https://assets.cdn.filesafe.space/E6Gh1sE1RnPtadmL7wmG/media/68bdf4dd6d0aaa7737d9cfdd.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>🏡</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
@@ -66,6 +66,10 @@ em{font-style:italic;color:var(--green)}
 .btn-green:hover{box-shadow:0 8px 22px rgba(86,239,159,.28)}
 .btn-ghost{background:rgba(255,255,255,.06);color:#cdd9f0;border:.5px solid rgba(255,255,255,.1)}
 .btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff;transform:translateY(-1px)}
+.nav-select{font-family:inherit;font-size:12.5px;font-weight:700;color:#cdd9f0;background:rgba(255,255,255,.06);border:.5px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .2s,color .2s}
+.nav-select:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-select.active{background:var(--green);color:var(--navy);border-color:transparent}
+.nav-select option{color:#16203a;background:#fff}
 
 /* ---------- BOARD ---------- */
 .board-wrap{padding:22px 28px 40px}
@@ -203,11 +207,11 @@ em{font-style:italic;color:var(--green)}
 
 <nav class="nav">
   <div class="nav-left">
-    <img class="nav-mark" src="https://assets.cdn.filesafe.space/E6Gh1sE1RnPtadmL7wmG/media/68bdf4dd6d0aaa7737d9cfdd.png" alt="">
     <div class="nav-title">🏡 Casa <span>López Acosta</span></div>
   </div>
   <div class="nav-actions">
     <span id="syncPill" class="sync-pill local"><span class="dot"></span><span id="syncTxt">Local</span></span>
+    <select id="filterAssignee" class="nav-select" onchange="setFilter(this.value)" title="Filtrar por responsable"></select>
     <button class="btn btn-green" onclick="openNew()">＋ Nueva tarea</button>
     <button class="btn btn-ghost" onclick="openCommon()">⭐ Comunes</button>
     <button class="btn btn-ghost" onclick="openRecur()">🔁 Recurrentes</button>
@@ -236,7 +240,7 @@ em{font-style:italic;color:var(--green)}
         <div class="field" id="statusField"><label>Columna</label><select id="f-status"></select></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Categoría (opcional)</label><input type="text" id="f-category" placeholder="Ej. Mantenimiento" list="catList" autocomplete="off"><datalist id="catList"></datalist></div>
+        <div class="field"><label>Categoría (opcional)</label><select id="f-category"></select></div>
         <div class="field"><label>Proveedor (opcional)</label><select id="f-provider"></select></div>
       </div>
       <div class="row2">
@@ -324,7 +328,7 @@ em{font-style:italic;color:var(--green)}
           <div class="field" style="margin-bottom:10px"><label>Nombre / servicio</label><input type="text" id="p-name" placeholder="Ej. Jardinero Pedro" autocomplete="off"></div>
           <div class="field" style="margin-bottom:10px"><label>Celular</label><input type="tel" id="p-phone" placeholder="55 1234 5678" autocomplete="off"></div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Categoría (opcional)</label><input type="text" id="p-cat" placeholder="Ej. Jardinería, Plomería, Alberca" list="catList" autocomplete="off"></div>
+        <div class="field" style="margin-bottom:10px"><label>Servicio / categoría (opcional)</label><input type="text" id="p-cat" placeholder="Ej. Jardinería, Plomería, Alberca" autocomplete="off"></div>
         <div style="display:flex;gap:8px"><button class="btn btn-green" onclick="saveProvider()" id="p-save">＋ Guardar proveedor</button><button class="btn btn-cancel" onclick="resetProvForm()" style="display:none" id="p-cancel">Cancelar</button></div>
         <p class="help" id="p-hint">El número de México (10 dígitos) arma el link de WhatsApp automáticamente.</p>
       </div>
@@ -400,7 +404,7 @@ const COMMON = [
 /* ============================================================ ESTADO ============================================================ */
 let state = {tasks:[], recurring:[], providers:[]};
 let db = null, suppress = false;
-let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null;
+let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "";
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
@@ -427,11 +431,18 @@ function initFirebase(){
   if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA")===0){ setSync(false); return; }
   try{
     firebase.initializeApp(FIREBASE_CONFIG); db=firebase.database(); setSync(true);
-    db.ref("boards/"+BOARD_KEY).on("value", snap=>{
-      const v=snap.val();
-      if(v){ suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[]}; suppress=false; localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render(); }
-      else { db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
-    }, ()=>setSync(false));
+    const ref=db.ref("boards/"+BOARD_KEY);
+    // Siembra única: si la nube está vacía pero hay datos locales, súbelos una sola vez.
+    ref.once("value").then(snap=>{
+      if(snap.val()==null && (state.tasks.length||state.recurring.length||state.providers.length)) ref.set(state).catch(()=>{});
+    }).catch(()=>{}).then(()=>{
+      // Espejo de la nube. Si está vacía/null -> tablero vacío (sin reescribir, así sí se puede vaciar).
+      ref.on("value", snap=>{
+        const v=snap.val()||{};
+        suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[]}; suppress=false;
+        localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render();
+      }, ()=>setSync(false));
+    });
   }catch(e){ setSync(false); }
 }
 function setSync(on){
@@ -479,7 +490,7 @@ function render(){
   document.querySelectorAll(".card").forEach(c=>{ prev[c.dataset.id]=c.getBoundingClientRect(); });
 
   document.getElementById("board").innerHTML = COLUMNS.map(col=>{
-    const cards=state.tasks.filter(t=>t.status===col.id);
+    const cards=state.tasks.filter(t=>t.status===col.id && (!filterA || t.assignee===filterA));
     return `<div class="col" data-col="${col.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
       <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${cards.length}</span></div>
       <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div></div>`;
@@ -531,7 +542,13 @@ function fillSelectors(){
   document.getElementById("f-dom").innerHTML = Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
   document.getElementById("dayChips").innerHTML = DAYS.map(d=>`<button class="chip daychip" data-day="${d.i}" onclick="toggleDay(this)">${d.t}</button>`).join("");
   const cats=[...new Set(COMMON.map(g=>g.cat))];
-  document.getElementById("catList").innerHTML = cats.map(c=>`<option value="${c}">`).join("");
+  document.getElementById("f-category").innerHTML = `<option value="">— Sin categoría —</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  document.getElementById("filterAssignee").innerHTML = `<option value="">👥 Todos</option>`+ASSIGNEES.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("");
+}
+function setFilter(v){
+  filterA=v;
+  document.getElementById("filterAssignee").classList.toggle("active", !!v);
+  render();
 }
 function fillProviderSelect(sel){
   document.getElementById("f-provider").innerHTML = `<option value="">— Sin proveedor —</option>`+state.providers.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
