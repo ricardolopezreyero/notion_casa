@@ -96,6 +96,11 @@ em{font-style:italic;color:var(--green)}
 .card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,18,64,.22)}
 .card:active{cursor:grabbing}
 .card.dragging{opacity:.4;transform:scale(.97) rotate(-.6deg);box-shadow:0 14px 34px rgba(0,18,64,.28)}
+.card.card-emerge{animation:emerge .52s var(--ease) both}
+.card-done{background:#EEFBF3;border-color:#BCE9CF;border-left:3px solid #2BC878}
+.card-done .card-title{color:#13412a}
+.load-more{display:block;width:100%;margin-top:10px;padding:9px;border-radius:9px;background:rgba(255,255,255,.06);color:#cdd9f0;border:.5px solid rgba(255,255,255,.12);font-family:inherit;font-size:12px;font-weight:700;transition:background .2s,color .2s,transform .2s var(--ease)}
+.load-more:hover{background:rgba(255,255,255,.13);color:#fff;transform:translateY(-1px)}
 .card-title{font-size:13.5px;font-weight:700;line-height:1.32;letter-spacing:-.2px;color:#16203a;padding-right:34px;word-break:break-word}
 .card-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:5px;word-break:break-word}
 .card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px}
@@ -211,6 +216,7 @@ em{font-style:italic;color:var(--green)}
 .foot span{color:rgba(255,255,255,.4)}
 @keyframes fIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes emerge{0%{opacity:0;transform:scale(.55) translateY(26px)}55%{opacity:1}100%{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes ovIn{from{opacity:0}to{opacity:1}}
 @keyframes ovOut{from{opacity:1}to{opacity:0}}
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -245,7 +251,7 @@ em{font-style:italic;color:var(--green)}
 <div class="overlay" id="ovNew">
   <div class="modal">
     <div class="modal-head">
-      <div><h2 id="newTitle">Nueva tarea</h2><div class="sub" id="newSub">Cae en "Por hacer"</div></div>
+      <div><h2 id="newTitle">Nueva tarea</h2><div class="sub" id="newSub">Cae en "Reserva"</div></div>
       <button class="x" onclick="closeOv('ovNew')">✕</button>
     </div>
     <div class="modal-body">
@@ -324,7 +330,7 @@ em{font-style:italic;color:var(--green)}
 <!-- ============ MODAL: TAREAS COMUNES ============ -->
 <div class="overlay" id="ovCommon">
   <div class="modal wide">
-    <div class="modal-head"><div><h2>⭐ Tareas comunes</h2><div class="sub">Un clic la agrega a "Por hacer"</div></div><button class="x" onclick="closeOv('ovCommon')">✕</button></div>
+    <div class="modal-head"><div><h2>⭐ Tareas comunes</h2><div class="sub">Un clic la agrega a "Reserva"</div></div><button class="x" onclick="closeOv('ovCommon')">✕</button></div>
     <div class="modal-body">
       <div class="field" style="margin-bottom:14px"><input type="text" id="commonSearch" placeholder="🔎 Buscar tarea..." oninput="renderCommon()" autocomplete="off"></div>
       <div id="commonList"></div>
@@ -439,8 +445,9 @@ const COMMON = [
 
 /* ============================================================ ESTADO ============================================================ */
 let state = {tasks:[], recurring:[], providers:[], usage:{}};
-let db = null, suppress = false;
+let db = null, suppress = false, lastWrite = 0;
 let curRecMode = "interval", curDays = [], modalMode = "task", editingRecurId = null, filterA = "", curPrio = "baja";
+let completedShown = 10, justCreatedId = null;
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
@@ -461,7 +468,7 @@ function load(){
 }
 function persist(){
   localStorage.setItem("board-"+BOARD_KEY, JSON.stringify(state));
-  if(db && !suppress){ db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
+  if(db && !suppress){ lastWrite=Date.now(); db.ref("boards/"+BOARD_KEY).set(state).catch(()=>{}); }
 }
 function initFirebase(){
   if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA")===0){ setSync(false); return; }
@@ -475,8 +482,12 @@ function initFirebase(){
       // Espejo de la nube. Si está vacía/null -> tablero vacío (sin reescribir, así sí se puede vaciar).
       ref.on("value", snap=>{
         const v=snap.val()||{};
-        suppress=true; state={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{}}; suppress=false;
-        localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(state)); render();
+        const incoming={tasks:v.tasks||[],recurring:v.recurring||[],providers:v.providers||[],usage:v.usage||{}};
+        localStorage.setItem("board-"+BOARD_KEY,JSON.stringify(incoming));
+        suppress=true; state=incoming; suppress=false;
+        // Si es el eco de nuestro propio cambio reciente, ya renderizamos local -> no re-render (preserva animaciones)
+        if(Date.now()-lastWrite < 1500) return;
+        render();
       }, ()=>setSync(false));
     });
   }catch(e){ setSync(false); }
@@ -526,10 +537,17 @@ function render(){
   document.querySelectorAll(".card").forEach(c=>{ prev[c.dataset.id]=c.getBoundingClientRect(); });
 
   document.getElementById("board").innerHTML = COLUMNS.map(col=>{
-    const cards=state.tasks.filter(t=>t.status===col.id && (!filterA || t.assignee===filterA));
+    let cards=state.tasks.filter(t=>t.status===col.id && (!filterA || t.assignee===filterA));
+    const total=cards.length;
+    let moreBtn="";
+    if(col.id==="completada"){
+      // Completada: más recientes primero, mostrar solo 'completedShown'
+      cards=cards.slice().sort((a,b)=>(b.completedAt||b.createdAt||0)-(a.completedAt||a.createdAt||0)).slice(0,completedShown);
+      if(total>cards.length) moreBtn=`<button class="load-more" onclick="loadMoreCompleted()">Cargar más (${total-cards.length} más)</button>`;
+    }
     return `<div class="col" data-col="${col.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.id}')">
-      <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${cards.length}</span></div>
-      <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div></div>`;
+      <div class="col-head"><span class="col-dot" style="background:${col.color}"></span><span class="col-name">${col.name}</span><span class="col-count">${total}</span></div>
+      <div class="col-body">${cards.length?cards.map(cardHTML).join(""):'<div class="col-empty">—</div>'}</div>${moreBtn}</div>`;
   }).join("");
 
   // FLIP: desliza cada tarjeta desde donde estaba hasta su nuevo lugar
@@ -547,7 +565,9 @@ function render(){
     });
     c.addEventListener("transitionend",function h(){ c.style.transition=""; c.style.animation=""; c.removeEventListener("transitionend",h); });
   });
+  justCreatedId=null;
 }
+function loadMoreCompleted(){ completedShown+=50; render(); }
 function cardHTML(t){
   const a=assigneeOf(t.assignee);
   const recur=t.recurId?`<span class="pill pill-recur">🔁 auto</span>`:"";
@@ -557,7 +577,9 @@ function cardHTML(t){
   const prio=`<span class="pill pill-prio ${pr.c}"><span class="pd" style="background:${pr.d}"></span>${pr.t}</span>`;
   const p=t.provider?providerOf(t.provider):null;
   const prov=p?`<a class="pill pill-prov" href="${waLink(p.phone)}" target="_blank" rel="noopener" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">🟢 ${esc(p.name)}</a>`:"";
-  return `<div class="card" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
+  const doneCls=t.status==="completada"?" card-done":"";
+  const emergeCls=t.id===justCreatedId?" card-emerge":"";
+  return `<div class="card${doneCls}${emergeCls}" draggable="true" data-id="${t.id}" onclick="cardClick(event,'${t.id}')" ondragstart="onDragStart(event,'${t.id}')" ondragend="onDragEnd(event)">
     <div class="card-actions"><button class="icon-btn" title="Subir (más prioridad)" onclick="event.stopPropagation();moveTask('${t.id}',-1)">▲</button><button class="icon-btn" title="Bajar" onclick="event.stopPropagation();moveTask('${t.id}',1)">▼</button><button class="icon-btn del" title="Borrar" onclick="event.stopPropagation();delTask('${t.id}')">✕</button></div>
     <div class="card-title">${esc(t.title)}</div>
     ${t.note?`<div class="card-note">${esc(t.note)}</div>`:""}
@@ -571,7 +593,7 @@ function onDragStart(e,id){ dragId=id; e.currentTarget.classList.add("dragging")
 function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); lastDragEnd=Date.now(); }
 function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add("drag-over"); }
 function onDragLeave(e){ e.currentTarget.classList.remove("drag-over"); }
-function onDrop(e,col){ e.preventDefault(); e.currentTarget.classList.remove("drag-over"); const t=state.tasks.find(x=>x.id===dragId); if(t&&t.status!==col){ t.status=col; persist(); render(); } dragId=null; }
+function onDrop(e,col){ e.preventDefault(); e.currentTarget.classList.remove("drag-over"); const t=state.tasks.find(x=>x.id===dragId); if(t&&t.status!==col){ t.status=col; t.completedAt=(col==="completada")?Date.now():null; persist(); render(); } dragId=null; }
 function cardClick(e,id){ if(Date.now()-lastDragEnd<250) return; openNew(id); }   // clic en toda la tarjeta abre detalle
 function moveTask(id,dir){
   const i=state.tasks.findIndex(t=>t.id===id); if(i<0) return;
@@ -614,7 +636,7 @@ function openNew(id){
   const isEdit=!!id;
   document.getElementById("f-id").value=id||"";
   document.getElementById("newTitle").textContent=isEdit?"Editar tarea":"Nueva tarea";
-  document.getElementById("newSub").textContent=isEdit?"Edita y guarda":"Cae en \"Por hacer\"";
+  document.getElementById("newSub").textContent=isEdit?"Edita y guarda":"Cae en \"Reserva\"";
   document.getElementById("statusField").style.display="block";
   document.getElementById("recurField").style.display=isEdit?"none":"block";
   document.getElementById("recurSwitch").style.display="flex";
@@ -632,7 +654,7 @@ function openNew(id){
   } else {
     document.getElementById("f-title").value="";
     document.getElementById("f-assignee").value="ricardo";
-    document.getElementById("f-status").value="porhacer";
+    document.getElementById("f-status").value="reserva";
     document.getElementById("f-category").value="";
     document.getElementById("f-cost").value="";
     document.getElementById("f-note").value="";
@@ -728,8 +750,8 @@ function saveTask(){
     const rule=readRecurRule(); if(!rule) return; rule.id=uid(); state.recurring.push(rule);
     runRecurring(); persist(); render(); closeOv("ovNew"); return;
   }
-  if(id){ Object.assign(state.tasks.find(x=>x.id===id),{title,assignee,status,category,note,provider,cost,priority:curPrio}); }
-  else { state.tasks.unshift({id:uid(),title,assignee,category,note,provider,cost,priority:curPrio,status,createdAt:Date.now(),date:todayStr()}); }
+  if(id){ const t=state.tasks.find(x=>x.id===id); t.completedAt=(status==="completada")?(t.completedAt||Date.now()):null; Object.assign(t,{title,assignee,status,category,note,provider,cost,priority:curPrio}); }
+  else { const nid=uid(); justCreatedId=nid; state.tasks.unshift({id:nid,title,assignee,category,note,provider,cost,priority:curPrio,status,completedAt:status==="completada"?Date.now():null,createdAt:Date.now(),date:todayStr()}); }
   persist(); render(); closeOv("ovNew");
 }
 function delTask(id){ if(!confirm("¿Borrar esta tarea?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); persist(); render(); }
@@ -764,7 +786,8 @@ function renderCommon(){
   document.getElementById("commonList").innerHTML = html||'<div class="empty-note">Sin resultados.</div>';
 }
 function addCommon(title,assignee,category,btn){
-  state.tasks.unshift({id:uid(),title,assignee,category,note:"",provider:"",cost:"",priority:"baja",status:"porhacer",createdAt:Date.now(),date:todayStr()});
+  const nid=uid(); justCreatedId=nid;
+  state.tasks.unshift({id:nid,title,assignee,category,note:"",provider:"",cost:"",priority:"baja",status:"reserva",completedAt:null,createdAt:Date.now(),date:todayStr()});
   const k=title.toLowerCase(); state.usage=state.usage||{};
   const prev=state.usage[k];
   state.usage[k]={title,a:assignee,cat:category,count:(prev?prev.count:0)+1,last:Date.now()};
